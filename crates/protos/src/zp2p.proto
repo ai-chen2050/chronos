@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package zp2p;
+
+import "zmessage.proto";
+
+// Zp2p
+message Zp2p {
+    uint32 version = 1;
+    ZIndentity type = 2;  // for p2p
+    ZAction action = 3;   // for p2p
+    ZPushType push_type = 4;        // for vlc
+    zmessage.ZMessage message = 5; 
+    bytes public_key = 6;
+    bytes signature = 7;  // for verifying 
+}
+
+enum ZIndentity {
+    U_TYPE_CLI = 0;  // client
+    U_TYPE_SER = 1;  // server
+}
+
+enum ZAction {
+    Z_TYPE_READ = 0;  // read
+    Z_TYPE_WRITE = 1;  // write
+}
+
+enum ZPushType {
+	Z_TYPE_DM = 0;   // direct msg
+	Z_TYPE_BC = 1;   // broadcast
+}

@@ -35,6 +35,7 @@ pub enum ZType {
     Rng = 0,
     Event = 1,
     Clock = 2,
+    Gateway = 3,
 }
 impl ZType {
     /// String value of the enum field names used in the ProtoBuf definition.
@@ -46,6 +47,7 @@ impl ZType {
             ZType::Rng => "Z_TYPE_RNG",
             ZType::Event => "Z_TYPE_EVENT",
             ZType::Clock => "Z_TYPE_CLOCK",
+            ZType::Gateway => "Z_TYPE_GATEWAY",
         }
     }
     /// Creates an enum from field names used in the ProtoBuf definition.
@@ -54,6 +56,7 @@ impl ZType {
             "Z_TYPE_RNG" => Some(Self::Rng),
             "Z_TYPE_EVENT" => Some(Self::Event),
             "Z_TYPE_CLOCK" => Some(Self::Clock),
+            "Z_TYPE_GATEWAY" => Some(Self::Gateway),
             _ => None,
         }
     }

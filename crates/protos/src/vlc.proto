@@ -1,0 +1,60 @@
+syntax = "proto3";
+
+package vlc;
+
+message Clock {
+    map<uint64, uint64> values = 1;
+}
+
+message ClockInfo {
+    Clock clock = 1;
+    bytes id = 2;       //id 为node id
+    bytes message_id = 3;
+    uint64 count = 4;
+    uint64 create_at = 5;
+}
+
+message MergeLog {
+    bytes from_id = 1;
+    bytes to_id = 2;
+    uint64 start_count = 3;
+    uint64 end_count = 4;
+    Clock s_clock = 5;
+    Clock e_clock = 6;
+    uint64 merge_at = 7;
+}
+
+// zmessage type = Z_TYPE_CLOCK 
+message ZClock {
+    ClockType type = 1; 
+    bytes data =2;
+}
+
+enum ClockType {
+    TYPE_EVENT_TRIGGER = 0;
+    TYPE_DIFF_REQ = 1;
+    TYPE_DIFF_RSP = 2;
+    TYPE_ACTIVE_SYNC = 3;
+}
+
+// Server Clock Message
+message EventTrigger {
+    ClockInfo clock_info = 1;
+}
+
+message DiffReq {
+    bytes to = 1;
+    ClockInfo from_clock = 2;
+}
+
+message DiffRsp {
+    bytes to = 1;
+    repeated string diffs = 2;
+    ClockInfo from = 3;
+}
+
+message ActiveSync {
+    bytes to = 1;
+    repeated string diffs = 2;
+    ClockInfo latest = 3;
+}

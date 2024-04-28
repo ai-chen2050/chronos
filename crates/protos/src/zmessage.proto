@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package message;
+package zmessage;
 
 message ZMessage {
     bytes id = 1;
@@ -17,6 +17,7 @@ enum ZType {
     Z_TYPE_RNG = 0;
     Z_TYPE_EVENT = 1;
     Z_TYPE_CLOCK = 2;
+    Z_TYPE_GATEWAY = 3;
 }
 
 message Rng {

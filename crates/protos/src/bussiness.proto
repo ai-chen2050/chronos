@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package bussiness;
+
+import "vlc.proto";
+
+// type = Z_TYPE_GATEWAY
+message ZGateway {
+    GatewayType type = 1;
+    bytes data = 2;
+}
+
+enum GatewayType {
+  TYPE_CLOCK_NODE = 0;
+  TYPE_MERGE_LOG = 1;   // ref merge log
+  TYPE_NODE_INFO = 2;  // heartbeat or node info
+}
+
+// type = TYPE_CLOCK_NODE
+message ClockNode {
+    vlc.Clock clock = 1;
+    bytes id = 2;
+    bytes message_id = 3;
+    uint64 count = 4;
+    uint64 create_at = 5;
+    bytes raw_message = 6;
+}
+
+message NodeInfo {
+    repeated string node_ids = 1;
+}

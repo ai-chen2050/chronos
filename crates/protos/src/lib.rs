@@ -1,4 +1,4 @@
-pub mod message;
+pub mod zmessage;
 
 pub fn add(left: usize, right: usize) -> usize {
     left + right
@@ -6,7 +6,7 @@ pub fn add(left: usize, right: usize) -> usize {
 
 #[cfg(test)]
 mod tests {
-    use crate::message::ZMessage;
+    use crate::zmessage::ZMessage;
     use super::*;
 
     #[test]
