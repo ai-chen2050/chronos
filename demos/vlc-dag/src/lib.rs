@@ -337,7 +337,7 @@ impl ClockInfo {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 struct MergeLog {
     from_id: u128,
-    to_id: u128,
+    to_id: u128,    // to_node trigger merge action
     start_count: u128,
     end_count: u128,
     s_clock_hash: Clock,    // todo: needs hash when use related-db

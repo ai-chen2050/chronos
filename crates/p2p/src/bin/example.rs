@@ -12,7 +12,7 @@ use tokio::sync::RwLock;
 use warp::Filter;
 use warp::ws::{Message, WebSocket};
 
-use protos::message::ZMessage;
+use protos::zmessage::ZMessage;
 
 #[derive(Parser, Debug, Clone)]
 #[command(author, version, about, long_about = None)]

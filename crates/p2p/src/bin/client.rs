@@ -10,7 +10,7 @@ use prost::Message as ProstMessage;
 use fixt::fixt;
 use kitsune_p2p_bin_data::KitsuneAgent;
 use kitsune_p2p_types::KAgent;
-use protos::message::ZMessage;
+use protos::zmessage::ZMessage;
 
 #[derive(Parser, Debug, Clone)]
 #[command(author, version, about, long_about = None)]
