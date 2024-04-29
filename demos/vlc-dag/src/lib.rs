@@ -317,7 +317,7 @@ impl ServerState {
 /// Clock info sinker to db.
 /// id is server node id, count is the event count in this server.
 #[derive(Serialize, Deserialize, Debug, Clone)]
-struct ClockInfo {
+pub struct ClockInfo {
     pub clock: Clock,
     pub id: u128,  
     pub message_id: String,

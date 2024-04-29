@@ -4,6 +4,13 @@ package bussiness;
 
 import "vlc.proto";
 
+// zmessage.type = Z_TYPE_CHAT
+// business data
+message ZChat {
+	string message_data = 1;
+	vlc.ClockInfo clock = 2;
+}
+
 // type = Z_TYPE_GATEWAY
 message ZGateway {
     GatewayType type = 1;

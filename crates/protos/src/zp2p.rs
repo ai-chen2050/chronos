@@ -6,7 +6,7 @@ pub struct Zp2p {
     #[prost(uint32, tag = "1")]
     pub version: u32,
     /// for p2p
-    #[prost(enumeration = "ZIndentity", tag = "2")]
+    #[prost(enumeration = "ZIdentity", tag = "2")]
     pub r#type: i32,
     /// for p2p
     #[prost(enumeration = "ZAction", tag = "3")]
@@ -24,21 +24,21 @@ pub struct Zp2p {
 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
 #[repr(i32)]
-pub enum ZIndentity {
+pub enum ZIdentity {
     /// client
     UTypeCli = 0,
     /// server
     UTypeSer = 1,
 }
-impl ZIndentity {
+impl ZIdentity {
     /// String value of the enum field names used in the ProtoBuf definition.
     ///
     /// The values are not transformed in any way and thus are considered stable
     /// (if the ProtoBuf definition does not change) and safe for programmatic use.
     pub fn as_str_name(&self) -> &'static str {
         match self {
-            ZIndentity::UTypeCli => "U_TYPE_CLI",
-            ZIndentity::UTypeSer => "U_TYPE_SER",
+            ZIdentity::UTypeCli => "U_TYPE_CLI",
+            ZIdentity::UTypeSer => "U_TYPE_SER",
         }
     }
     /// Creates an enum from field names used in the ProtoBuf definition.

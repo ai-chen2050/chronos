@@ -7,7 +7,7 @@ import "zmessage.proto";
 // Zp2p
 message Zp2p {
     uint32 version = 1;
-    ZIndentity type = 2;  // for p2p
+    ZIdentity type = 2;  // for p2p
     ZAction action = 3;   // for p2p
     ZPushType push_type = 4;        // for vlc
     zmessage.ZMessage message = 5; 
@@ -15,7 +15,7 @@ message Zp2p {
     bytes signature = 7;  // for verifying 
 }
 
-enum ZIndentity {
+enum ZIdentity {
     U_TYPE_CLI = 0;  // client
     U_TYPE_SER = 1;  // server
 }

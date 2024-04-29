@@ -18,6 +18,12 @@ version = "0.1.0"
 dependencies = [
  "db_sql",
  "node_api",
+ "prost",
+ "prost-types",
+ "protos",
+ "sea-orm",
+ "serde",
+ "serde_json",
  "structopt",
  "tokio",
  "tools",

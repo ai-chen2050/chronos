@@ -1,6 +1,7 @@
 mod zchronod;
 mod node_factory;
 mod storage;
+mod vlc;
 
 use std::path::PathBuf;
 use tools::tokio_zhronod;
