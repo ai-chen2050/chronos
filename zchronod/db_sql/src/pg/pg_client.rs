@@ -41,7 +41,7 @@ pub async fn set_up_db(request_url: &str, db_name: &str) -> Result<DatabaseConne
 
     let schema_manager = SchemaManager::new(&db); // To investigate the schema
 
-    Migrator::refresh(&db.clone()).await?;
+    Migrator::up(&db.clone(), None).await?;
     assert!(schema_manager.has_table("clock_infos").await?);
     assert!(schema_manager.has_table("merge_logs").await?);
 
