@@ -3,7 +3,6 @@ use std::sync::RwLock;
 use std::{cmp, collections::BTreeSet, sync::Arc};
 use node_api::config::ZchronodConfig;
 use prost::Message;
-use sea_orm::Identity;
 use tokio::net::UdpSocket;
 use tokio::sync::Mutex;
 use websocket::ReceiveMessage;
