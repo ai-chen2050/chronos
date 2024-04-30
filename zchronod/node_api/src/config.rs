@@ -10,7 +10,7 @@ pub struct ZchronodConfig {
     pub storage_root_path: Option<StorageRootPath>,
     pub pg_db_url: String,
     pub pg_db_name: String,
-    pub outer_p2p: String,
+    pub outer_p2p: Option<String>,
     pub inner_p2p: String,  // vlc server bind udp socket
 }
 

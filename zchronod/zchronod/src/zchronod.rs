@@ -1,4 +1,5 @@
 use std::io::Read;
+use std::net::SocketAddr;
 use std::sync::RwLock;
 use std::{cmp, collections::BTreeSet, sync::Arc};
 use node_api::config::ZchronodConfig;
@@ -68,6 +69,7 @@ impl ServerState {
     /// Add items into the state. Returns true if resulting in a new state.
     fn add(&mut self, items: BTreeSet<String>) -> bool {
         if items.is_subset(&self.items) {
+            println!("duplicate message, no action");
             false
         } else {
             self.items.extend(items);
@@ -100,15 +102,15 @@ pub(crate) async fn p2p_event_loop(arc_zchronod: Arc<Mutex<Zchronod>>) {
     println!("Now p2p udp listen on : {}", arc_zchronod.lock().await.config.inner_p2p);
     loop {
         let mut buf = [0; 1500];
-        let (n, _) = arc_zchronod.lock().await.socket.recv_from(&mut buf).await.unwrap();
+        let (n, src) = arc_zchronod.lock().await.socket.recv_from(&mut buf).await.unwrap();
         let msg = prost::bytes::Bytes::copy_from_slice(&buf[..n]);
         let m = ZMessage::decode(msg).unwrap();
         // arc_zchronod.handle_msg(msg).await;
-        handle_msg(arc_zchronod.clone(), m).await;
+        handle_msg(arc_zchronod.clone(), m, src).await;
     }
 }
 
-pub(crate) async fn handle_msg(arc_zchronod: Arc<Mutex<Zchronod>>, msg: ZMessage) {
+pub(crate) async fn handle_msg(arc_zchronod: Arc<Mutex<Zchronod>>, msg: ZMessage, src: SocketAddr) {
     match msg.identity() {
         ZIdentity::UTypeCli => {
             match msg.action() {
@@ -118,7 +120,7 @@ pub(crate) async fn handle_msg(arc_zchronod: Arc<Mutex<Zchronod>>, msg: ZMessage
                             let zchat_msg = prost::bytes::Bytes::from(msg.clone().data);
                             let m = ZChat::decode(zchat_msg).unwrap();
                             if arc_zchronod.lock().await.state.add(BTreeSet::from_iter(vec![m.message_data])) {
-                                broadcast_state(arc_zchronod, msg).await;
+                                broadcast_state(arc_zchronod, msg, src).await;
                             }
                         }
                         _ => println!("TBD: now just support ZType::Z_TYPE_ZCHAT=4 todo!"),
@@ -139,7 +141,7 @@ pub(crate) async fn handle_msg(arc_zchronod: Arc<Mutex<Zchronod>>, msg: ZMessage
                 Ok(input_state) => {
                     if arc_zchronod.lock().await.state.merge(&input_state) {
                         // self.broadcast_state().await;
-                        broadcast_state(arc_zchronod, msg).await;
+                        broadcast_state(arc_zchronod, msg, src).await;
                     }
                 },
             }
@@ -147,7 +149,7 @@ pub(crate) async fn handle_msg(arc_zchronod: Arc<Mutex<Zchronod>>, msg: ZMessage
     }
 }
 
-pub(crate) async fn broadcast_state(arc_zchronod: Arc<Mutex<Zchronod>>, msg: ZMessage) {
+pub(crate) async fn broadcast_state(arc_zchronod: Arc<Mutex<Zchronod>>, msg: ZMessage, src: SocketAddr) {
     let serde_res = serde_json::to_string(&arc_zchronod.lock().await.state);
     let serde_string = &serde_res.unwrap();
     let state_data = serde_string.as_bytes();
@@ -162,7 +164,7 @@ pub(crate) async fn broadcast_state(arc_zchronod: Arc<Mutex<Zchronod>>, msg: ZMe
     let mut buf2 = vec![];
     msg.encode(&mut buf2).unwrap();
     println!("buf: {:?}", buf2);
-    arc_zchronod.lock().await.socket.send_to(&buf2, &arc_zchronod.lock().await.config.outer_p2p).await.unwrap();
+    arc_zchronod.lock().await.socket.send_to(&buf2, src).await.unwrap();
 }
 /// sample handler
 pub(crate) async fn handle_incoming_ws_msg() {

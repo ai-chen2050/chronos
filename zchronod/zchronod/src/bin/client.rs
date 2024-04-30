@@ -52,5 +52,21 @@ fn main() -> std::io::Result<()> {
 
     socket.send_to(&buf3, destination)?;
 
+    // recv msg
+    let mut buf = [0; 1024];
+    match socket.recv_from(&mut buf) {
+        Ok((size, _)) => {
+            let msg = prost::bytes::Bytes::copy_from_slice(&buf[..size]);
+            let  response= ZMessage::decode(msg).unwrap();
+            println!("Received response: {:?}", response);
+        }
+        Err(ref err) if err.kind() == std::io::ErrorKind::WouldBlock => {
+            println!("No response received.");
+        }
+        Err(err) => {
+            eprintln!("Error receiving response: {}", err);
+        }
+    }
+
     Ok(())
 }
