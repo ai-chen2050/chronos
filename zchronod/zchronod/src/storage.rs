@@ -7,7 +7,7 @@ use tokio::sync::RwLock;
 
 pub struct Storage {
     // pub zchronod_db: DbWrite<DbKindZchronod>,
-    pub pg_db: Arc<RwLock<DatabaseConnection>>
+    // pub pg_db: Arc<RwLock<DatabaseConnection>>
 }
 
 impl Storage {
@@ -16,13 +16,18 @@ impl Storage {
         //     config.storage_root_path.as_ref().unwrap().as_path(),
         //     DbKindZchronod,
         // ).unwrap(); // todo error handling
-        let url = format!("{}/{}", config.pg_db_url, config.pg_db_name);
-        let pg_db = Database::connect(&url).await.expect("failed to connect to database");
-        let pg_db_arc = Arc::new(RwLock::new(pg_db));
-        Self {
-            // zchronod_db,
-            pg_db: pg_db_arc,
-        }
+        
+        // connect to pg db
+        // let url = format!("{}/{}", config.pg_db_url, config.pg_db_name);
+        // let pg_db = Database::connect(&url).await.expect("failed to connect to database");
+        // let pg_db_arc = Arc::new(RwLock::new(pg_db));
+        // Self {
+        //     // zchronod_db,
+        //     pg_db: pg_db_arc,
+        // }
+        
+        println!("\nskip new db or storage\n");
+        Self{}
     }
     pub async fn get(&self, key: String) -> Option<String> {
         todo!()
