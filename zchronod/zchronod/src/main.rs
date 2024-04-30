@@ -19,7 +19,7 @@ struct ZchronodCli {
     #[structopt(short = "c", long = "config", parse(from_os_str), help = "Yaml file only")]
     config_path: Option<std::path::PathBuf>,
 
-    #[structopt(long = "init_pg", help = "Init & refresh pg, Caution")]
+    #[structopt(long = "init_pg", help = "Init & refresh pg, caution: new db & new table")]
     init_pg: Option<String>,
 }
 
@@ -45,7 +45,7 @@ async fn async_main() {
     // setup node
     if let Some(config_path) = args.config_path {
         help_info = false;
-        let zchronod_config = construct_node_config(config_path);
+        let zchronod_config = construct_node_config(config_path.clone());
         // let db_root_path = zchronod_config.storage_root_path.unwrap();
     
         //todo metrics init
@@ -54,7 +54,7 @@ async fn async_main() {
     }
 
     if help_info {
-        println!("\n Please exec: Zchronod -h for help info.\n")
+        println!("\nPlease exec: Zchronod -h for help info.\n")
     }
     
     // shutdown Zchronod

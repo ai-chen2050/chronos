@@ -18,7 +18,7 @@ pub struct Zchronod {
     pub state: ServerState,
 }
 
-pub type ZchronodArc = Arc<RwLock<Zchronod>>;
+pub type ZchronodArc = Arc<Mutex<Zchronod>>;
 
 impl Zchronod {
     pub fn zchronod_factory() -> ZchronodFactory {

@@ -3,6 +3,7 @@ use node_api::config::ZchronodConfig;
 use node_api::error::ZchronodResult;
 use tokio::net::UdpSocket;
 use tokio::sync::Mutex;
+use tokio::task::JoinSet;
 use crate::{storage, zchronod};
 use crate::zchronod::{ServerState, Zchronod, ZchronodArc};
 
@@ -38,11 +39,18 @@ impl ZchronodFactory {
             state
         }));
 
-        tokio::task::spawn(zchronod::p2p_event_loop(arc_zchronod));
+        let mut set = JoinSet::new();
+        set.spawn(zchronod::p2p_event_loop(arc_zchronod.clone()));
 
         // start client websocket
-        tokio::task::spawn(zchronod::handle_incoming_ws_msg());
+        set.spawn(zchronod::handle_incoming_ws_msg());
 
-        todo!()
+        set.join_next().await;
+        set.abort_all();
+        
+        // tokio::task::spawn(zchronod::p2p_event_loop(arc_zchronod.clone()));
+        // tokio::task::spawn(zchronod::handle_incoming_ws_msg());
+
+        ZchronodResult::Ok(arc_zchronod)
     }
 }
