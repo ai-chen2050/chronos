@@ -100,9 +100,11 @@ async fn build_zchronod(config: ZchronodConfig) -> ZchronodArc {
 fn construct_node_config(config_path: PathBuf) -> config::ZchronodConfig {
     match config::ZchronodConfig::load_config(config_path) {
         Err(ZchronodConfigError::ConfigMissing(_)) => {
+            println!("config path can't found.");
             std::process::exit(ERROR_CODE);
         }
         Err(ZchronodConfigError::SerializationError(err)) => {
+            println!("config path can't be serialize");
             std::process::exit(ERROR_CODE);
         }
         result => {
