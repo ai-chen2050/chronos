@@ -1,4 +1,4 @@
 pg_db_url: "postgres://postgres:hetu@0.0.0.0:5432"
 pg_db_name: "vlc_inner_db"
-outer_p2p: "127.0.0.1:8000"
-inner_p2p: "0.0.0.0:8000"
+outer_p2p: "0.0.0.0:8051"
+inner_p2p: "0.0.0.0:8050"

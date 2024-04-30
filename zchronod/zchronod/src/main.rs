@@ -73,6 +73,10 @@ async fn init_db(pg_conn_str: String) -> bool {
     
         println!("Base URL: {}", base_url);
         println!("Database Name: {}", db_name);
+        if db_name == "" {
+            println!("Database name is empty, exit");
+            return false;
+        }
         let database_connection = set_up_db(base_url, db_name).await;
         match database_connection {
             Err(err) => {

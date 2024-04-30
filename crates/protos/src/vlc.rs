@@ -2,8 +2,8 @@
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct Clock {
-    #[prost(map = "uint64, uint64", tag = "1")]
-    pub values: ::std::collections::HashMap<u64, u64>,
+    #[prost(map = "string, uint64", tag = "1")]
+    pub values: ::std::collections::HashMap<::prost::alloc::string::String, u64>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]

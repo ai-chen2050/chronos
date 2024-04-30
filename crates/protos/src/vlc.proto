@@ -3,7 +3,7 @@ syntax = "proto3";
 package vlc;
 
 message Clock {
-    map<uint64, uint64> values = 1;
+    map<string, uint64> values = 1;
 }
 
 message ClockInfo {

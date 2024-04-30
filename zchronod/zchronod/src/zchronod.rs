@@ -97,6 +97,7 @@ impl ServerState {
 }
 
 pub(crate) async fn p2p_event_loop(arc_zchronod: Arc<Mutex<Zchronod>>) {
+    println!("Now p2p udp listen on : {}", arc_zchronod.lock().await.config.inner_p2p);
     loop {
         let mut buf = [0; 1500];
         let (n, _) = arc_zchronod.lock().await.socket.recv_from(&mut buf).await.unwrap();
@@ -120,19 +121,27 @@ pub(crate) async fn handle_msg(arc_zchronod: Arc<Mutex<Zchronod>>, msg: ZMessage
                                 broadcast_state(arc_zchronod, msg).await;
                             }
                         }
-                        _ => println!("todo!"),
+                        _ => println!("TBD: now just support ZType::Z_TYPE_ZCHAT=4 todo!"),
                     }
                 }
                 ZAction::ZTypeRead => {
-                    todo!()
+                    println!("TBD: action read todo!");
+                    // todo!()
                 }
             }
         }
         ZIdentity::UTypeSer => {
-            let input_state: ServerState = serde_json::from_slice(&msg.data).unwrap();
-            if arc_zchronod.lock().await.state.merge(&input_state) {
-                // self.broadcast_state().await;
-                broadcast_state(arc_zchronod, msg).await;
+            let parse_ret = serde_json::from_slice(&msg.data);
+            match parse_ret {
+                Err(_) => {
+                    println!("\nErr: server_state please to use serde_json serialize");
+                }
+                Ok(input_state) => {
+                    if arc_zchronod.lock().await.state.merge(&input_state) {
+                        // self.broadcast_state().await;
+                        broadcast_state(arc_zchronod, msg).await;
+                    }
+                },
             }
         }
     }
