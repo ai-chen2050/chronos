@@ -10,7 +10,7 @@ use websocket::ReceiveMessage;
 use crate::{node_factory::ZchronodFactory, storage::Storage, vlc::Clock};
 use serde::{Deserialize, Serialize};
 use protos::zmessage::{ZAction, ZIdentity, ZMessage, ZType};
-use protos::bussiness::{ZChat};
+use protos::bussiness::ZChat;
 
 pub struct Zchronod {
     pub config: ZchronodConfig,
@@ -29,6 +29,8 @@ impl Zchronod {
     async fn handle_msg(&mut self, msg: String) {
         
     }
+
+    
 }
 
 /// Clock info sinker to db.
@@ -47,6 +49,19 @@ impl ClockInfo {
         let create_at = tools::helper::get_time_ms();
         Self { clock, node_id, message_id, count, create_at }
     }
+}
+
+/// MergeLog sinker to db.
+/// id is server node id, count is the event count in this server.
+#[derive(Serialize, Deserialize, Debug, Clone)]
+struct MergeLog {
+    from_id: String,
+    to_id: String,    // to_node trigger merge action
+    start_count: u128,
+    end_count: u128,
+    s_clock_hash: String,    // todo: needs hash when use related-db
+    e_clock_hash: String,
+    merge_at: u128,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -128,7 +143,7 @@ pub(crate) async fn handle_msg(arc_zchronod: Arc<Mutex<Zchronod>>, msg: ZMessage
                 }
                 ZAction::ZTypeRead => {
                     println!("TBD: action read todo!");
-                    // todo!()
+                    // todo!() & DB
                 }
             }
         }

@@ -16,6 +16,7 @@ dependencies = [
 name = "Zchronod"
 version = "0.1.0"
 dependencies = [
+ "chrono",
  "db_sql",
  "node_api",
  "prost",
@@ -24,6 +25,7 @@ dependencies = [
  "sea-orm",
  "serde",
  "serde_json",
+ "sha2 0.10.8",
  "structopt",
  "tokio",
  "tools",
@@ -6387,6 +6389,7 @@ version = "0.1.0"
 dependencies = [
  "futures",
  "once_cell",
+ "sha2 0.10.8",
  "tokio",
 ]
 
