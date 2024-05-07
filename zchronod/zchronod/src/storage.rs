@@ -50,7 +50,10 @@ impl Storage {
             create_at: ActiveValue::Set(naive_datetime),
             ..Default::default()
         };
-        let _res = ClockInfos::insert(clock_info).exec(self.pg_db.as_ref()).await.expect("insert clock_info error");
+        let res = ClockInfos::insert(clock_info).exec(self.pg_db.as_ref()).await;
+        if let Err(err) = res {
+            println!("Insert clock_info error, err: {}", err);
+        }
     }
 
     pub async fn sinker_merge_log(&mut self, fclock_info: &ClockInfo, tclock_info: &ClockInfo) {
@@ -70,6 +73,9 @@ impl Storage {
             merge_at: ActiveValue::Set(naive_datetime),
             ..Default::default()
         };
-        let _res = MergeLogs::insert(merge_log).exec(self.pg_db.as_ref()).await.expect("insert merge_log error");
+        let res = MergeLogs::insert(merge_log).exec(self.pg_db.as_ref()).await;
+        if let Err(err) = res {
+            println!("Insert merge_log error, err: {}", err);
+        }
     }
 }

@@ -23,7 +23,7 @@ impl MigrationTrait for Migration {
                             .primary_key(),
                     )
                     .col(ColumnDef::new(ClockInfos::Clock).string().not_null())
-                    .col(ColumnDef::new(ClockInfos::ClockHash).char_len(32).unique_key().not_null())
+                    .col(ColumnDef::new(ClockInfos::ClockHash).char_len(64).unique_key().not_null())
                     .col(ColumnDef::new(ClockInfos::NodeId).char_len(32).not_null())
                     .col(ColumnDef::new(ClockInfos::MessageId).text().not_null())
                     .col(ColumnDef::new(ClockInfos::RawMessage).text().not_null())

@@ -4,8 +4,9 @@ use std::sync::RwLock;
 use std::{cmp, collections::BTreeSet, sync::Arc};
 use node_api::config::ZchronodConfig;
 use prost::Message;
+use protos::vlc::ClockInfo as PClockInfo;
 use tokio::net::UdpSocket;
-use tokio::sync::Mutex;
+use tokio::sync::{broadcast, Mutex};
 use websocket::ReceiveMessage;
 use crate::{node_factory::ZchronodFactory, storage::Storage, vlc::Clock};
 use serde::{Deserialize, Serialize};
@@ -30,7 +31,7 @@ impl Zchronod {
         
     }
 
-    
+
 }
 
 /// Clock info sinker to db.
@@ -48,6 +49,36 @@ impl ClockInfo {
     fn new(clock: Clock, node_id: String, message_id: String, count: u128) -> Self {
         let create_at = tools::helper::get_time_ms();
         Self { clock, node_id, message_id, count, create_at }
+    }
+}
+
+impl From<&PClockInfo> for ClockInfo {
+    fn from(protobuf_clock_info: &PClockInfo) -> Self {
+        let clock = protobuf_clock_info
+            .clock
+            .as_ref()
+            .map(|c| {
+                Clock {
+                    values: c
+                        .values
+                        .iter()
+                        .map(|(k, v)| (k.clone(), *v as u128))
+                        .collect(),
+                }
+            }).unwrap();
+
+        let node_id = String::from_utf8_lossy(&protobuf_clock_info.id).into_owned();
+        let message_id = String::from_utf8_lossy(&protobuf_clock_info.message_id).into_owned();
+        let count = protobuf_clock_info.count;
+        let create_at = protobuf_clock_info.create_at;
+
+        ClockInfo {
+            clock,
+            node_id,
+            message_id,
+            count: count.into(),
+            create_at: create_at.into(),
+        }
     }
 }
 
@@ -82,7 +113,7 @@ impl ServerState {
     }
 
     /// Add items into the state. Returns true if resulting in a new state.
-    fn add(&mut self, items: BTreeSet<String>) -> bool {
+    pub fn add(&mut self, items: BTreeSet<String>) -> bool {
         if items.is_subset(&self.items) {
             println!("duplicate message, no action");
             false
@@ -96,18 +127,19 @@ impl ServerState {
     /// Merge another ServerState into the current state. Returns true if
     /// resulting in a new state (different from current and received
     /// state).
-    fn merge(&mut self, other: &Self) -> bool {
+    pub fn merge(&mut self, other: &Self) -> (bool, bool) {
         match self.clock_info.clock.partial_cmp(&other.clock_info.clock) {
-            Some(cmp::Ordering::Equal) => false,
-            Some(cmp::Ordering::Greater) => false,
+            Some(cmp::Ordering::Equal) => (false, false),
+            Some(cmp::Ordering::Greater) => (false, false),
             Some(cmp::Ordering::Less) => {
                 self.clock_info.clock = other.clock_info.clock.clone();
                 self.items = other.items.clone();
-                false
+                (false, true)
             }
             None => {
                 self.clock_info.clock.merge(&vec![&other.clock_info.clock]);
-                self.add(other.items.clone())
+                let added = self.add(other.items.clone());
+                (added, added)
             }
         }
     }
@@ -134,7 +166,10 @@ pub(crate) async fn handle_msg(arc_zchronod: Arc<Mutex<Zchronod>>, msg: ZMessage
                         ZType::Zchat =>{
                             let zchat_msg = prost::bytes::Bytes::from(msg.clone().data);
                             let m = ZChat::decode(zchat_msg).unwrap();
-                            if arc_zchronod.lock().await.state.add(BTreeSet::from_iter(vec![m.message_data])) {
+                            let prost_clock = m.clock.unwrap();
+                            let custom_clock_info: ClockInfo = (&prost_clock).into();
+                            if arc_zchronod.lock().await.state.add(BTreeSet::from_iter(vec![m.message_data.clone()])) {
+                                arc_zchronod.lock().await.storage.sinker_clock(String::from_utf8(msg.id.clone()).unwrap(), m.message_data, &custom_clock_info).await;
                                 broadcast_state(arc_zchronod, msg, src).await;
                             }
                         }
@@ -154,9 +189,17 @@ pub(crate) async fn handle_msg(arc_zchronod: Arc<Mutex<Zchronod>>, msg: ZMessage
                     println!("\nErr: server_state please to use serde_json serialize");
                 }
                 Ok(input_state) => {
-                    if arc_zchronod.lock().await.state.merge(&input_state) {
+                    let (need_broadcast, merged) = arc_zchronod.lock().await.state.merge(&input_state);
+                    if need_broadcast {
                         // self.broadcast_state().await;
-                        broadcast_state(arc_zchronod, msg, src).await;
+                        broadcast_state(arc_zchronod.clone(), msg, src).await;
+                    }
+                    if merged {
+                        let mut state_guard = arc_zchronod.lock().await;
+                        let input_clock_info = &input_state.clock_info;
+                        let state_clock_info = &state_guard.state.clock_info.clone();
+
+                        state_guard.storage.sinker_merge_log(input_clock_info, state_clock_info).await;
                     }
                 },
             }

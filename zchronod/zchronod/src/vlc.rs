@@ -9,7 +9,7 @@ use std::collections::HashMap;
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
 pub struct Clock {
-    values: HashMap<String, u128>,
+    pub values: HashMap<String, u128>,
 }
 
 impl PartialOrd for Clock {
