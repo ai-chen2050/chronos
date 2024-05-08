@@ -2,7 +2,7 @@ name: Create and publish a Docker image
 
 on:
   push:
-    branches: ['main']
+    branches: ['feat/vlc-inner-node']
 
 env:
   REGISTRY: ghcr.io
