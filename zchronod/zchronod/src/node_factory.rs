@@ -43,7 +43,7 @@ impl ZchronodFactory {
         set.spawn(zchronod::p2p_event_loop(arc_zchronod.clone()));
 
         // start client websocket
-        set.spawn(zchronod::handle_incoming_ws_msg());
+        set.spawn(zchronod::handle_incoming_ws_msg(self.config.ws_url));
 
         set.join_next().await;
         set.abort_all();

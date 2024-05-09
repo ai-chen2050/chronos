@@ -225,9 +225,9 @@ pub(crate) async fn broadcast_state(arc_zchronod: Arc<Mutex<Zchronod>>, msg: ZMe
     arc_zchronod.lock().await.socket.send_to(&buf2, src).await.unwrap();
 }
 /// sample handler
-pub(crate) async fn handle_incoming_ws_msg() {
+pub(crate) async fn handle_incoming_ws_msg(websocket_url: String) {
     let ws_config = Arc::new(websocket::WebsocketConfig::default());
-    let l = websocket::WebsocketListener::bind(ws_config, "127.0.0.1:8080").await.unwrap();
+    let l = websocket::WebsocketListener::bind(ws_config, websocket_url).await.unwrap();
 
     let addr = l.local_addr().unwrap();
 
