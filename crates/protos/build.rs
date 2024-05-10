@@ -6,7 +6,7 @@ fn main() -> Result<()> {
         &[
             "src/zmessage.proto",
             "src/vlc.proto",
-            "src/zp2p.proto",
+            "src/innermsg.proto",
             "src/bussiness.proto",
             ], 
         &["src"])?;

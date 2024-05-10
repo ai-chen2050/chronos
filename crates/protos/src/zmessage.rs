@@ -8,20 +8,15 @@ pub struct ZMessage {
     pub version: u32,
     #[prost(enumeration = "ZType", tag = "3")]
     pub r#type: i32,
-    #[prost(enumeration = "Action", tag = "4")]
-    pub action: i32,
-    /// for p2p
-    #[prost(enumeration = "Identity", tag = "5")]
-    pub identity: i32,
-    #[prost(bytes = "vec", tag = "6")]
+    #[prost(bytes = "vec", tag = "4")]
     pub public_key: ::prost::alloc::vec::Vec<u8>,
-    #[prost(bytes = "vec", tag = "7")]
+    #[prost(bytes = "vec", tag = "5")]
     pub data: ::prost::alloc::vec::Vec<u8>,
-    #[prost(bytes = "vec", tag = "8")]
+    #[prost(bytes = "vec", tag = "6")]
     pub signature: ::prost::alloc::vec::Vec<u8>,
-    #[prost(bytes = "vec", tag = "9")]
+    #[prost(bytes = "vec", tag = "7")]
     pub from: ::prost::alloc::vec::Vec<u8>,
-    #[prost(bytes = "vec", tag = "10")]
+    #[prost(bytes = "vec", tag = "8")]
     pub to: ::prost::alloc::vec::Vec<u8>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
@@ -65,62 +60,6 @@ impl ZType {
             "Z_TYPE_CLOCK" => Some(Self::Clock),
             "Z_TYPE_GATEWAY" => Some(Self::Gateway),
             "Z_TYPE_ZCHAT" => Some(Self::Zchat),
-            _ => None,
-        }
-    }
-}
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
-#[repr(i32)]
-pub enum Identity {
-    /// client
-    Cli = 0,
-    /// server
-    Ser = 1,
-}
-impl Identity {
-    /// String value of the enum field names used in the ProtoBuf definition.
-    ///
-    /// The values are not transformed in any way and thus are considered stable
-    /// (if the ProtoBuf definition does not change) and safe for programmatic use.
-    pub fn as_str_name(&self) -> &'static str {
-        match self {
-            Identity::Cli => "IDENTITY_CLI",
-            Identity::Ser => "IDENTITY_SER",
-        }
-    }
-    /// Creates an enum from field names used in the ProtoBuf definition.
-    pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
-        match value {
-            "IDENTITY_CLI" => Some(Self::Cli),
-            "IDENTITY_SER" => Some(Self::Ser),
-            _ => None,
-        }
-    }
-}
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
-#[repr(i32)]
-pub enum Action {
-    /// read
-    Read = 0,
-    /// write
-    Write = 1,
-}
-impl Action {
-    /// String value of the enum field names used in the ProtoBuf definition.
-    ///
-    /// The values are not transformed in any way and thus are considered stable
-    /// (if the ProtoBuf definition does not change) and safe for programmatic use.
-    pub fn as_str_name(&self) -> &'static str {
-        match self {
-            Action::Read => "ACTION_READ",
-            Action::Write => "ACTION_WRITE",
-        }
-    }
-    /// Creates an enum from field names used in the ProtoBuf definition.
-    pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
-        match value {
-            "ACTION_READ" => Some(Self::Read),
-            "ACTION_WRITE" => Some(Self::Write),
             _ => None,
         }
     }

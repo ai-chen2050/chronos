@@ -1,6 +1,6 @@
 use prost::Message;
 use std::{collections::{BTreeSet, HashMap}, net::UdpSocket};
-use protos::{bussiness::ZChat, vlc::{self, Clock, ClockInfo}, zmessage::ZMessage};
+use protos::{bussiness::ZChat, innermsg::{Action, Identity, Innermsg}, vlc::{self, Clock, ClockInfo}, zmessage::{ZMessage, ZType}};
 use Zchronod::zchronod::ServerState;
 
 fn main() -> std::io::Result<()> {
@@ -8,19 +8,17 @@ fn main() -> std::io::Result<()> {
     socket.set_broadcast(true)?;
 
     // now support message: client、full_sync_server
-    let message_type = "client";
-    let message_type = "full_sync_server";
+    let msg_type = "client";
+    let msg_type = "full_sync_server";
 
     let mut buf3 = Vec::new();
-    if message_type == "client" {
+    if msg_type == "client" {
         buf3 = client_message();
-    } else if message_type == "full_sync_server" {
+    } else if msg_type == "full_sync_server" {
         buf3 = full_sync_server_message();
     }
     
-    // let message = "Hello, world!";
     let destination = "0.0.0.0:8050";
-
     socket.send_to(&buf3, destination)?;
 
     // recv msg
@@ -28,7 +26,7 @@ fn main() -> std::io::Result<()> {
     match socket.recv_from(&mut buf) {
         Ok((size, _)) => {
             let msg = prost::bytes::Bytes::copy_from_slice(&buf[..size]);
-            let  response= ZMessage::decode(msg).unwrap();
+            let  response= Innermsg::decode(msg).unwrap();
             println!("Received response: {:?}", response);
         }
         Err(ref err) if err.kind() == std::io::ErrorKind::WouldBlock => {
@@ -69,19 +67,24 @@ fn client_message() -> Vec<u8> {
     zchat.encode(&mut buf2).unwrap();
     println!("buf2: {:?}", buf2);
     
-    let msg = ZMessage {
+    let p2p_msg = ZMessage {
         id: Vec::from("intobytes"),
         from: Vec::from("msgfrom"),
         to: Vec::from("msg.to"),
-        r#type: 4,
-        action: 1,
+        r#type: ZType::Zchat.into(),
         data: buf2,
-        identity: 0,
+        ..Default::default()
+    };
+
+    let inner_msg = Innermsg {
+        identity: Identity::Cli.into(),
+        action: Action::Write.into(),
+        message: Some(p2p_msg),
         ..Default::default()
     };
     
     let mut buf3 = vec![];
-    msg.encode(&mut buf3).unwrap();
+    inner_msg.encode(&mut buf3).unwrap();
     println!("buf: {:?}", buf3);
     buf3
 }
@@ -94,19 +97,24 @@ fn full_sync_server_message() -> Vec<u8> {
     let serde_string = &serde_res.unwrap();
     let state_data = serde_string.as_bytes();
     
-    let msg = ZMessage {
+    let p2p_msg = ZMessage {
         id: Vec::from("intobytes"),
         from: Vec::from("msgfrom"),
         to: Vec::from("msg.to"),
-        r#type: 4,
-        action: 1,
+        r#type: ZType::Zchat.into(),
         data: state_data.to_vec(),
-        identity: 1,
+        ..Default::default()
+    };
+
+    let inner_msg = Innermsg {
+        identity: Identity::Ser.into(),
+        action: Action::Write.into(),
+        message: Some(p2p_msg),
         ..Default::default()
     };
     
     let mut buf3 = vec![];
-    msg.encode(&mut buf3).unwrap();
+    inner_msg.encode(&mut buf3).unwrap();
     println!("buf: {:?}", buf3);
     buf3
 }

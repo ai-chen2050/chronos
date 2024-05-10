@@ -4,14 +4,15 @@ package bussiness;
 
 import "vlc.proto";
 
-// zmessage.type = Z_TYPE_CHAT
 // business data
+// ZMessage.type = Z_TYPE_CHAT
 message ZChat {
 	string message_data = 1;
 	vlc.ClockInfo clock = 2;
 }
 
-// type = Z_TYPE_GATEWAY
+// ZMessage.type = Z_TYPE_GATEWAY
+// Gateway just only needs read api
 message ZGateway {
     GatewayType type = 1;
     bytes data = 2;
@@ -23,7 +24,7 @@ enum GatewayType {
   GATEWAY_TYPE_NODE_INFO = 2;  // heartbeat or node info
 }
 
-// type = TYPE_CLOCK_NODE
+// ZGateway.type = GATEWAY_TYPE_CLOCK_NODE
 message ClockNode {
     vlc.Clock clock = 1;
     bytes id = 2;
@@ -33,6 +34,7 @@ message ClockNode {
     bytes raw_message = 6;
 }
 
+// ZGateway.type = GATEWAY_TYPE_NODE_INFO
 message NodeInfo {
     repeated string node_ids = 1;
 }

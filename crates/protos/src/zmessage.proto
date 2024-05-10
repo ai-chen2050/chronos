@@ -6,13 +6,11 @@ message ZMessage {
     bytes id = 1;
     uint32 version = 2;
     ZType type = 3;
-    Action action = 4;
-    Identity identity = 5;  // for p2p 
-    bytes public_key = 6;
-    bytes data = 7;
-    bytes signature = 8;
-    bytes from = 9;
-    bytes to = 10;
+    bytes public_key = 4;
+    bytes data = 5;
+    bytes signature = 6;
+    bytes from = 7;
+    bytes to = 8;
   }
 
 enum ZType {
@@ -21,16 +19,6 @@ enum ZType {
     Z_TYPE_CLOCK = 2;
     Z_TYPE_GATEWAY = 3;
     Z_TYPE_ZCHAT = 4;
-}
-
-enum Identity {
-    IDENTITY_CLI = 0;  // client
-    IDENTITY_SER = 1;  // server
-}
-
-enum Action {
-    ACTION_READ = 0;  // read
-    ACTION_WRITE = 1;  // write
 }
 
 message Rng {
