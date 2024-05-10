@@ -6,13 +6,13 @@ pub struct Zp2p {
     #[prost(uint32, tag = "1")]
     pub version: u32,
     /// for p2p
-    #[prost(enumeration = "ZIdentity", tag = "2")]
+    #[prost(enumeration = "Identity", tag = "2")]
     pub r#type: i32,
     /// for p2p
-    #[prost(enumeration = "ZAction", tag = "3")]
+    #[prost(enumeration = "Action", tag = "3")]
     pub action: i32,
     /// for vlc
-    #[prost(enumeration = "ZPushType", tag = "4")]
+    #[prost(enumeration = "PushType", tag = "4")]
     pub push_type: i32,
     #[prost(message, optional, tag = "5")]
     pub message: ::core::option::Option<super::zmessage::ZMessage>,
@@ -24,84 +24,84 @@ pub struct Zp2p {
 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
 #[repr(i32)]
-pub enum ZIdentity {
+pub enum Identity {
     /// client
-    UTypeCli = 0,
+    Cli = 0,
     /// server
-    UTypeSer = 1,
+    Ser = 1,
 }
-impl ZIdentity {
+impl Identity {
     /// String value of the enum field names used in the ProtoBuf definition.
     ///
     /// The values are not transformed in any way and thus are considered stable
     /// (if the ProtoBuf definition does not change) and safe for programmatic use.
     pub fn as_str_name(&self) -> &'static str {
         match self {
-            ZIdentity::UTypeCli => "U_TYPE_CLI",
-            ZIdentity::UTypeSer => "U_TYPE_SER",
+            Identity::Cli => "IDENTITY_CLI",
+            Identity::Ser => "IDENTITY_SER",
         }
     }
     /// Creates an enum from field names used in the ProtoBuf definition.
     pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
         match value {
-            "U_TYPE_CLI" => Some(Self::UTypeCli),
-            "U_TYPE_SER" => Some(Self::UTypeSer),
+            "IDENTITY_CLI" => Some(Self::Cli),
+            "IDENTITY_SER" => Some(Self::Ser),
             _ => None,
         }
     }
 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
 #[repr(i32)]
-pub enum ZAction {
+pub enum Action {
     /// read
-    ZTypeRead = 0,
+    Read = 0,
     /// write
-    ZTypeWrite = 1,
+    Write = 1,
 }
-impl ZAction {
+impl Action {
     /// String value of the enum field names used in the ProtoBuf definition.
     ///
     /// The values are not transformed in any way and thus are considered stable
     /// (if the ProtoBuf definition does not change) and safe for programmatic use.
     pub fn as_str_name(&self) -> &'static str {
         match self {
-            ZAction::ZTypeRead => "Z_TYPE_READ",
-            ZAction::ZTypeWrite => "Z_TYPE_WRITE",
+            Action::Read => "ACTION_READ",
+            Action::Write => "ACTION_WRITE",
         }
     }
     /// Creates an enum from field names used in the ProtoBuf definition.
     pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
         match value {
-            "Z_TYPE_READ" => Some(Self::ZTypeRead),
-            "Z_TYPE_WRITE" => Some(Self::ZTypeWrite),
+            "ACTION_READ" => Some(Self::Read),
+            "ACTION_WRITE" => Some(Self::Write),
             _ => None,
         }
     }
 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
 #[repr(i32)]
-pub enum ZPushType {
+pub enum PushType {
     /// direct msg
-    ZTypeDm = 0,
+    Dm = 0,
     /// broadcast
-    ZTypeBc = 1,
+    Bc = 1,
 }
-impl ZPushType {
+impl PushType {
     /// String value of the enum field names used in the ProtoBuf definition.
     ///
     /// The values are not transformed in any way and thus are considered stable
     /// (if the ProtoBuf definition does not change) and safe for programmatic use.
     pub fn as_str_name(&self) -> &'static str {
         match self {
-            ZPushType::ZTypeDm => "Z_TYPE_DM",
-            ZPushType::ZTypeBc => "Z_TYPE_BC",
+            PushType::Dm => "PUSH_TYPE_DM",
+            PushType::Bc => "PUSH_TYPE_BC",
         }
     }
     /// Creates an enum from field names used in the ProtoBuf definition.
     pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
         match value {
-            "Z_TYPE_DM" => Some(Self::ZTypeDm),
-            "Z_TYPE_BC" => Some(Self::ZTypeBc),
+            "PUSH_TYPE_DM" => Some(Self::Dm),
+            "PUSH_TYPE_BC" => Some(Self::Bc),
             _ => None,
         }
     }

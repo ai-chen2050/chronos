@@ -44,11 +44,11 @@ pub struct NodeInfo {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
 #[repr(i32)]
 pub enum GatewayType {
-    TypeClockNode = 0,
+    ClockNode = 0,
     /// ref merge log
-    TypeMergeLog = 1,
+    MergeLog = 1,
     /// heartbeat or node info
-    TypeNodeInfo = 2,
+    NodeInfo = 2,
 }
 impl GatewayType {
     /// String value of the enum field names used in the ProtoBuf definition.
@@ -57,17 +57,17 @@ impl GatewayType {
     /// (if the ProtoBuf definition does not change) and safe for programmatic use.
     pub fn as_str_name(&self) -> &'static str {
         match self {
-            GatewayType::TypeClockNode => "TYPE_CLOCK_NODE",
-            GatewayType::TypeMergeLog => "TYPE_MERGE_LOG",
-            GatewayType::TypeNodeInfo => "TYPE_NODE_INFO",
+            GatewayType::ClockNode => "GATEWAY_TYPE_CLOCK_NODE",
+            GatewayType::MergeLog => "GATEWAY_TYPE_MERGE_LOG",
+            GatewayType::NodeInfo => "GATEWAY_TYPE_NODE_INFO",
         }
     }
     /// Creates an enum from field names used in the ProtoBuf definition.
     pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
         match value {
-            "TYPE_CLOCK_NODE" => Some(Self::TypeClockNode),
-            "TYPE_MERGE_LOG" => Some(Self::TypeMergeLog),
-            "TYPE_NODE_INFO" => Some(Self::TypeNodeInfo),
+            "GATEWAY_TYPE_CLOCK_NODE" => Some(Self::ClockNode),
+            "GATEWAY_TYPE_MERGE_LOG" => Some(Self::MergeLog),
+            "GATEWAY_TYPE_NODE_INFO" => Some(Self::NodeInfo),
             _ => None,
         }
     }

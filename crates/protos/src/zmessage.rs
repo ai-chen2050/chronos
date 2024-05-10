@@ -8,10 +8,10 @@ pub struct ZMessage {
     pub version: u32,
     #[prost(enumeration = "ZType", tag = "3")]
     pub r#type: i32,
-    #[prost(enumeration = "ZAction", tag = "4")]
+    #[prost(enumeration = "Action", tag = "4")]
     pub action: i32,
     /// for p2p
-    #[prost(enumeration = "ZIdentity", tag = "5")]
+    #[prost(enumeration = "Identity", tag = "5")]
     pub identity: i32,
     #[prost(bytes = "vec", tag = "6")]
     pub public_key: ::prost::alloc::vec::Vec<u8>,
@@ -71,56 +71,56 @@ impl ZType {
 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
 #[repr(i32)]
-pub enum ZIdentity {
+pub enum Identity {
     /// client
-    UTypeCli = 0,
+    Cli = 0,
     /// server
-    UTypeSer = 1,
+    Ser = 1,
 }
-impl ZIdentity {
+impl Identity {
     /// String value of the enum field names used in the ProtoBuf definition.
     ///
     /// The values are not transformed in any way and thus are considered stable
     /// (if the ProtoBuf definition does not change) and safe for programmatic use.
     pub fn as_str_name(&self) -> &'static str {
         match self {
-            ZIdentity::UTypeCli => "U_TYPE_CLI",
-            ZIdentity::UTypeSer => "U_TYPE_SER",
+            Identity::Cli => "IDENTITY_CLI",
+            Identity::Ser => "IDENTITY_SER",
         }
     }
     /// Creates an enum from field names used in the ProtoBuf definition.
     pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
         match value {
-            "U_TYPE_CLI" => Some(Self::UTypeCli),
-            "U_TYPE_SER" => Some(Self::UTypeSer),
+            "IDENTITY_CLI" => Some(Self::Cli),
+            "IDENTITY_SER" => Some(Self::Ser),
             _ => None,
         }
     }
 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
 #[repr(i32)]
-pub enum ZAction {
+pub enum Action {
     /// read
-    ZTypeRead = 0,
+    Read = 0,
     /// write
-    ZTypeWrite = 1,
+    Write = 1,
 }
-impl ZAction {
+impl Action {
     /// String value of the enum field names used in the ProtoBuf definition.
     ///
     /// The values are not transformed in any way and thus are considered stable
     /// (if the ProtoBuf definition does not change) and safe for programmatic use.
     pub fn as_str_name(&self) -> &'static str {
         match self {
-            ZAction::ZTypeRead => "Z_TYPE_READ",
-            ZAction::ZTypeWrite => "Z_TYPE_WRITE",
+            Action::Read => "ACTION_READ",
+            Action::Write => "ACTION_WRITE",
         }
     }
     /// Creates an enum from field names used in the ProtoBuf definition.
     pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
         match value {
-            "Z_TYPE_READ" => Some(Self::ZTypeRead),
-            "Z_TYPE_WRITE" => Some(Self::ZTypeWrite),
+            "ACTION_READ" => Some(Self::Read),
+            "ACTION_WRITE" => Some(Self::Write),
             _ => None,
         }
     }

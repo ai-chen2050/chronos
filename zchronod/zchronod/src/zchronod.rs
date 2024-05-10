@@ -10,7 +10,7 @@ use tokio::sync::{broadcast, Mutex};
 use websocket::ReceiveMessage;
 use crate::{node_factory::ZchronodFactory, storage::Storage, vlc::Clock};
 use serde::{Deserialize, Serialize};
-use protos::zmessage::{ZAction, ZIdentity, ZMessage, ZType};
+use protos::zmessage::{Action, Identity, ZMessage, ZType};
 use protos::bussiness::ZChat;
 
 pub struct Zchronod {
@@ -159,9 +159,9 @@ pub(crate) async fn p2p_event_loop(arc_zchronod: Arc<Mutex<Zchronod>>) {
 
 pub(crate) async fn handle_msg(arc_zchronod: Arc<Mutex<Zchronod>>, msg: ZMessage, src: SocketAddr) {
     match msg.identity() {
-        ZIdentity::UTypeCli => {
+        Identity::Cli => {
             match msg.action() {
-                ZAction::ZTypeWrite => {
+                Action::Write => {
                     match msg.r#type() {
                         ZType::Zchat =>{
                             let zchat_msg = prost::bytes::Bytes::from(msg.clone().data);
@@ -176,13 +176,13 @@ pub(crate) async fn handle_msg(arc_zchronod: Arc<Mutex<Zchronod>>, msg: ZMessage
                         _ => println!("TBD: now just support ZType::Z_TYPE_ZCHAT=4 todo!"),
                     }
                 }
-                ZAction::ZTypeRead => {
+                Action::Read => {
                     println!("TBD: action read todo!");
                     // todo!() & DB
                 }
             }
         }
-        ZIdentity::UTypeSer => {
+        Identity::Ser => {
             let parse_ret = serde_json::from_slice(&msg.data);
             match parse_ret {
                 Err(_) => {
@@ -212,7 +212,7 @@ pub(crate) async fn broadcast_state(arc_zchronod: Arc<Mutex<Zchronod>>, msg: ZMe
     let serde_string = &serde_res.unwrap();
     let state_data = serde_string.as_bytes();
     let msg = ZMessage {
-        id: arc_zchronod.lock().await.state.id.clone().into_bytes(),
+        id: msg.id,
         from: Vec::from(msg.from.clone()),
         to: Vec::from(msg.to.clone()),
         data: state_data.to_vec(),

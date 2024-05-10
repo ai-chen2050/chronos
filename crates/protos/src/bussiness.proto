@@ -18,9 +18,9 @@ message ZGateway {
 }
 
 enum GatewayType {
-  TYPE_CLOCK_NODE = 0;
-  TYPE_MERGE_LOG = 1;   // ref merge log
-  TYPE_NODE_INFO = 2;  // heartbeat or node info
+  GATEWAY_TYPE_CLOCK_NODE = 0;
+  GATEWAY_TYPE_MERGE_LOG = 1;   // ref merge log
+  GATEWAY_TYPE_NODE_INFO = 2;  // heartbeat or node info
 }
 
 // type = TYPE_CLOCK_NODE

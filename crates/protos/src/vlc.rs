@@ -64,7 +64,7 @@ pub struct DiffReq {
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct DiffRsp {
+pub struct DiffResp {
     #[prost(bytes = "vec", tag = "1")]
     pub to: ::prost::alloc::vec::Vec<u8>,
     #[prost(string, repeated, tag = "2")]
@@ -85,10 +85,10 @@ pub struct ActiveSync {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
 #[repr(i32)]
 pub enum ClockType {
-    TypeEventTrigger = 0,
-    TypeDiffReq = 1,
-    TypeDiffRsp = 2,
-    TypeActiveSync = 3,
+    EventTrigger = 0,
+    DiffReq = 1,
+    DiffRsp = 2,
+    ActiveSync = 3,
 }
 impl ClockType {
     /// String value of the enum field names used in the ProtoBuf definition.
@@ -97,19 +97,19 @@ impl ClockType {
     /// (if the ProtoBuf definition does not change) and safe for programmatic use.
     pub fn as_str_name(&self) -> &'static str {
         match self {
-            ClockType::TypeEventTrigger => "TYPE_EVENT_TRIGGER",
-            ClockType::TypeDiffReq => "TYPE_DIFF_REQ",
-            ClockType::TypeDiffRsp => "TYPE_DIFF_RSP",
-            ClockType::TypeActiveSync => "TYPE_ACTIVE_SYNC",
+            ClockType::EventTrigger => "CLOCK_TYPE_EVENT_TRIGGER",
+            ClockType::DiffReq => "CLOCK_TYPE_DIFF_REQ",
+            ClockType::DiffRsp => "CLOCK_TYPE_DIFF_RSP",
+            ClockType::ActiveSync => "CLOCK_TYPE_ACTIVE_SYNC",
         }
     }
     /// Creates an enum from field names used in the ProtoBuf definition.
     pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
         match value {
-            "TYPE_EVENT_TRIGGER" => Some(Self::TypeEventTrigger),
-            "TYPE_DIFF_REQ" => Some(Self::TypeDiffReq),
-            "TYPE_DIFF_RSP" => Some(Self::TypeDiffRsp),
-            "TYPE_ACTIVE_SYNC" => Some(Self::TypeActiveSync),
+            "CLOCK_TYPE_EVENT_TRIGGER" => Some(Self::EventTrigger),
+            "CLOCK_TYPE_DIFF_REQ" => Some(Self::DiffReq),
+            "CLOCK_TYPE_DIFF_RSP" => Some(Self::DiffRsp),
+            "CLOCK_TYPE_ACTIVE_SYNC" => Some(Self::ActiveSync),
             _ => None,
         }
     }

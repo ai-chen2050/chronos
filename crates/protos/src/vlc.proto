@@ -27,14 +27,14 @@ message MergeLog {
 // zmessage type = Z_TYPE_CLOCK 
 message ZClock {
     ClockType type = 1; 
-    bytes data =2;
+    bytes data = 2;
 }
 
 enum ClockType {
-    TYPE_EVENT_TRIGGER = 0;
-    TYPE_DIFF_REQ = 1;
-    TYPE_DIFF_RSP = 2;
-    TYPE_ACTIVE_SYNC = 3;
+    CLOCK_TYPE_EVENT_TRIGGER = 0;
+    CLOCK_TYPE_DIFF_REQ = 1;
+    CLOCK_TYPE_DIFF_RSP = 2;
+    CLOCK_TYPE_ACTIVE_SYNC = 3;
 }
 
 // Server Clock Message
@@ -47,7 +47,7 @@ message DiffReq {
     ClockInfo from_clock = 2;
 }
 
-message DiffRsp {
+message DiffResp {
     bytes to = 1;
     repeated string diffs = 2;
     ClockInfo from = 3;
