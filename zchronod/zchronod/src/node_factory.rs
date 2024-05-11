@@ -1,9 +1,10 @@
-use std::sync::{Arc, RwLock};
+use std::sync::{Arc};
 use node_api::config::ZchronodConfig;
 use node_api::error::ZchronodResult;
 use tokio::net::UdpSocket;
-use tokio::sync::Mutex;
-use tokio::task::JoinSet;
+use tokio::sync::{Mutex, RwLock};
+use tokio::task::{JoinHandle, JoinSet};
+use tokio::time::sleep;
 use crate::{storage, zchronod};
 use crate::zchronod::{ServerState, Zchronod, ZchronodArc};
 
@@ -32,24 +33,22 @@ impl ZchronodFactory {
         let socket = UdpSocket::bind(self.config.inner_p2p).await.unwrap();
         let state = ServerState::new("".to_owned());
         // create arc zchronod node
-        let arc_zchronod = Arc::new(Mutex::new(Zchronod {
+        let arc_zchronod = Arc::new(RwLock::new(Zchronod {
             config: cfg,
             socket,
             storage,
             state
         }));
-
-        let mut set = JoinSet::new();
-        set.spawn(zchronod::p2p_event_loop(arc_zchronod.clone()));
-
-        // start client websocket
-        set.spawn(zchronod::handle_incoming_ws_msg(self.config.ws_url));
-
-        set.join_next().await;
-        set.abort_all();
         
-        // tokio::task::spawn(zchronod::p2p_event_loop(arc_zchronod.clone()));
-        // tokio::task::spawn(zchronod::handle_incoming_ws_msg());
+        let mut join_handles: Vec<JoinHandle<()>> = Vec::new();
+        join_handles.push(tokio::spawn(zchronod::p2p_event_loop(arc_zchronod.clone())));
+        
+        // start client websocket
+        join_handles.push(tokio::spawn(zchronod::handle_incoming_ws_msg(self.config.ws_url)));
+
+        for handle in join_handles {
+            handle.await.unwrap();
+        }
 
         ZchronodResult::Ok(arc_zchronod)
     }

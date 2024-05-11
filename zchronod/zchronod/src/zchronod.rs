@@ -2,7 +2,7 @@ use std::net::SocketAddr;
 use std::{cmp, collections::BTreeSet, sync::Arc};
 use node_api::config::ZchronodConfig;
 use tokio::net::UdpSocket;
-use tokio::sync::{broadcast, Mutex};
+use tokio::sync::{broadcast, Mutex, RwLock};
 use websocket::ReceiveMessage;
 use crate::{node_factory::ZchronodFactory, storage::Storage, vlc::Clock};
 use serde::{Deserialize, Serialize};
@@ -19,7 +19,7 @@ pub struct Zchronod {
     pub state: ServerState,
 }
 
-pub type ZchronodArc = Arc<Mutex<Zchronod>>;
+pub type ZchronodArc = Arc<RwLock<Zchronod>>;
 
 impl Zchronod {
     pub fn zchronod_factory() -> ZchronodFactory {
@@ -143,11 +143,11 @@ impl ServerState {
     }
 }
 
-pub(crate) async fn p2p_event_loop(arc_zchronod: Arc<Mutex<Zchronod>>) {
-    println!("Now p2p udp listen on : {}", arc_zchronod.lock().await.config.inner_p2p);
+pub(crate) async fn p2p_event_loop(arc_zchronod: Arc<RwLock<Zchronod>>) {
+    println!("Now p2p udp listen on : {}", arc_zchronod.read().await.config.inner_p2p);
     loop {
         let mut buf = [0; 1500];
-        let (n, src) = arc_zchronod.lock().await.socket.recv_from(&mut buf).await.unwrap();
+        let (n, src) = arc_zchronod.read().await.socket.recv_from(&mut buf).await.unwrap();
         let msg = prost::bytes::Bytes::copy_from_slice(&buf[..n]);
         if let Ok(m) = Innermsg::decode(msg) {
             handle_msg(arc_zchronod.clone(), m, src).await;
@@ -157,7 +157,7 @@ pub(crate) async fn p2p_event_loop(arc_zchronod: Arc<Mutex<Zchronod>>) {
     }
 }
 
-pub(crate) async fn handle_msg(arc_zchronod: Arc<Mutex<Zchronod>>, inner_msg: Innermsg, src: SocketAddr) {
+pub(crate) async fn handle_msg(arc_zchronod: Arc<RwLock<Zchronod>>, inner_msg: Innermsg, src: SocketAddr) {
     if let Some(p2p_msg) = &inner_msg.clone().message {
         match inner_msg.identity() {
             Identity::Cli => handle_cli_msg(inner_msg, p2p_msg, arc_zchronod, src).await,
@@ -169,19 +169,19 @@ pub(crate) async fn handle_msg(arc_zchronod: Arc<Mutex<Zchronod>>, inner_msg: In
     }
 }
 
-async fn handle_ser_msg(inner_msg: Innermsg, p2p_msg: &ZMessage, arc_zchronod: Arc<Mutex<Zchronod>>, src: SocketAddr) {
+async fn handle_ser_msg(inner_msg: Innermsg, p2p_msg: &ZMessage, arc_zchronod: Arc<RwLock<Zchronod>>, src: SocketAddr) {
     let parse_ret = serde_json::from_slice(&p2p_msg.data);
     match parse_ret {
         Err(_) => {
             println!("\nErr: server_state please to use serde_json serialize");
         }
         Ok(input_state) => {
-            let (need_broadcast, merged) = arc_zchronod.lock().await.state.merge(&input_state);
+            let (need_broadcast, merged) = arc_zchronod.write().await.state.merge(&input_state);
             if need_broadcast {
                 broadcast_state(arc_zchronod.clone(), inner_msg, src).await;
             }
             if merged {
-                let mut state_guard = arc_zchronod.lock().await;
+                let mut state_guard = arc_zchronod.write().await;
                 let input_clock_info = &input_state.clock_info;
                 let state_clock_info = &state_guard.state.clock_info.clone();
     
@@ -191,7 +191,7 @@ async fn handle_ser_msg(inner_msg: Innermsg, p2p_msg: &ZMessage, arc_zchronod: A
     }
 }
 
-async fn handle_cli_msg(inner_msg: Innermsg, p2p_msg: &ZMessage, arc_zchronod: Arc<Mutex<Zchronod>>, src: SocketAddr) {
+async fn handle_cli_msg(inner_msg: Innermsg, p2p_msg: &ZMessage, arc_zchronod: Arc<RwLock<Zchronod>>, src: SocketAddr) {
     match inner_msg.action() {
         Action::Write => {
             match p2p_msg.r#type() {
@@ -200,8 +200,8 @@ async fn handle_cli_msg(inner_msg: Innermsg, p2p_msg: &ZMessage, arc_zchronod: A
                     let m = ZChat::decode(zchat_msg).unwrap();
                     let prost_clock = m.clock.unwrap();
                     let custom_clock_info: ClockInfo = (&prost_clock).into();
-                    if arc_zchronod.lock().await.state.add(BTreeSet::from_iter(vec![m.message_data.clone()])) {
-                        arc_zchronod.lock().await.storage.sinker_clock(String::from_utf8(p2p_msg.id.clone()).unwrap(), m.message_data, &custom_clock_info).await;
+                    if arc_zchronod.write().await.state.add(BTreeSet::from_iter(vec![m.message_data.clone()])) {
+                        arc_zchronod.write().await.storage.sinker_clock(String::from_utf8(p2p_msg.id.clone()).unwrap(), m.message_data, &custom_clock_info).await;
                         broadcast_state(arc_zchronod, inner_msg, src).await;
                     }
                 }
@@ -216,8 +216,8 @@ async fn handle_cli_msg(inner_msg: Innermsg, p2p_msg: &ZMessage, arc_zchronod: A
     }
 }
 
-pub(crate) async fn broadcast_state(arc_zchronod: Arc<Mutex<Zchronod>>, inner_msg: Innermsg, src: SocketAddr) {
-    let serde_res = serde_json::to_string(&arc_zchronod.lock().await.state);
+pub(crate) async fn broadcast_state(arc_zchronod: Arc<RwLock<Zchronod>>, inner_msg: Innermsg, src: SocketAddr) {
+    let serde_res = serde_json::to_string(&arc_zchronod.read().await.state);
     let serde_string = &serde_res.unwrap();
     let state_data = serde_string.as_bytes();
 
@@ -232,7 +232,7 @@ pub(crate) async fn broadcast_state(arc_zchronod: Arc<Mutex<Zchronod>>, inner_ms
     let mut buf2 = vec![];
     inner.encode(&mut buf2).unwrap();
     println!("buf: {:?}", buf2);
-    arc_zchronod.lock().await.socket.send_to(&buf2, src).await.unwrap();
+    arc_zchronod.write().await.socket.send_to(&buf2, src).await.unwrap();
 }
 
 /// sample handler
