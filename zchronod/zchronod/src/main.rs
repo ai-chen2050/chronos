@@ -4,7 +4,7 @@ mod storage;
 mod vlc;
 
 use std::path::PathBuf;
-use db_sql::pg::pg_client::set_up_db;
+use db_sql::pg::pg_client::setup_db;
 use tools::tokio_zhronod;
 use node_api::config;
 use structopt::StructOpt;
@@ -47,56 +47,48 @@ async fn async_main() {
         help_info = false;
         let zchronod_config = construct_node_config(config_path.clone());
         // let db_root_path = zchronod_config.storage_root_path.unwrap();
-    
+
         //todo metrics init
-    
+
         let zchronod = build_zchronod(zchronod_config.clone()).await;
     }
 
     if help_info {
         println!("\nPlease exec: Zchronod -h for help info.\n")
     }
-    
-    // shutdown Zchronod
-    // tokio::signal::ctrl_c()
-    //     .await
-    //     .unwrap_or_else(|e| tracing::error!("Could not handle termination signal: {:?}", e));
-    // tracing::info!("Gracefully shutting down Zchronod...");
-    // let shutdown_result = zchronod.shutdown().await;
-    // handle_shutdown(shutdown_result);
 }
 
-async fn init_db(pg_conn_str: String) -> bool {
-    if let Ok(url) = url::Url::parse(&pg_conn_str) {
+async fn init_db(postgres_conn_str: String) -> bool {
+    return if let Ok(url) = url::Url::parse(&postgres_conn_str) {
         let db_name = url.path().trim_start_matches('/');
         let base_url = url.as_str().trim_end_matches(db_name);
-    
+        let is_db_name_empty = db_name == "";
         println!("Base URL: {}", base_url);
         println!("Database Name: {}", db_name);
-        if db_name == "" {
-            println!("Database name is empty, exit");
+        if is_db_name_empty {
+            println!("Database name is empty, exiting");
             return false;
         }
-        let database_connection = set_up_db(base_url, db_name).await;
-        match database_connection {
+
+        match setup_db(base_url, db_name).await {
             Err(err) => {
-                println!("{}", err);
-                return false;
+                eprintln!("{}", err);
+                false
             }
             Ok(conn) => {
                 println!("Setup database success");
                 let _ = conn.close().await;
-                return true;
-            },
+                true
+            }
         }
     } else {
         eprintln!("Invalid PostgreSQL connection string");
-        return false;
-    }
+        false
+    };
 }
 
 async fn build_zchronod(config: ZchronodConfig) -> ZchronodArc {
-    Zchronod::zchronod_factory().set_config(config).produce().await.map_err(|e| {
+    Zchronod::zchronod_factory().set_config(config).initialize_node().await.map_err(|e| {
         panic!("Failed to build Zchronod due to error [{:?}]", e);
     }).unwrap()
 }

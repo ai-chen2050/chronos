@@ -9,7 +9,7 @@ fn main() -> std::io::Result<()> {
 
     // now support message: client、full_sync_server
     let msg_type = "client";
-    let msg_type = "full_sync_server";
+    //let msg_type = "full_sync_server";
 
     let mut buf3 = Vec::new();
     if msg_type == "client" {
@@ -77,7 +77,7 @@ fn client_message() -> Vec<u8> {
     };
 
     let inner_msg = Innermsg {
-        identity: Identity::Cli.into(),
+        identity: Identity::Client.into(),
         action: Action::Write.into(),
         message: Some(p2p_msg),
         ..Default::default()
@@ -107,7 +107,7 @@ fn full_sync_server_message() -> Vec<u8> {
     };
 
     let inner_msg = Innermsg {
-        identity: Identity::Ser.into(),
+        identity: Identity::Server.into(),
         action: Action::Write.into(),
         message: Some(p2p_msg),
         ..Default::default()

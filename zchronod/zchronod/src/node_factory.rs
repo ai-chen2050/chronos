@@ -22,35 +22,31 @@ impl ZchronodFactory {
         self
     }
 
-    pub async fn produce(self) -> ZchronodResult<ZchronodArc> {
-        let storage = storage::Storage::new(self.config.clone()).await;
-
-        /// p2p network pass send && recv
-        // let (p2p_send, p2p_recv) = match zchronod_p2p::spawn_zchronod_p2p().await;
-
-        let cfg = self.config.clone();
-        let socket = UdpSocket::bind(self.config.inner_p2p).await.unwrap();
+    pub async fn create_zchronod(config: ZchronodConfig) -> ZchronodArc {
+        let cfg = config.clone();
+        let address = config.inner_p2p.clone();
+        let socket = UdpSocket::bind(address).await.unwrap();
         let state = ServerState::new("".to_owned());
-        // create arc zchronod node
-        let arc_zchronod = Arc::new(Mutex::new(Zchronod {
+        let storage = storage::Storage::new(config.clone()).await;
+        let zchronod = Zchronod {
             config: cfg,
             socket,
             storage,
-            state
-        }));
+            state,
+        };
+
+        Arc::new(Mutex::new(zchronod))
+    }
+
+    pub async fn initialize_node(self) -> ZchronodResult<ZchronodArc> {
+        let arc_zchronod = ZchronodFactory::create_zchronod(self.config.clone()).await;
 
         let mut set = JoinSet::new();
         set.spawn(zchronod::p2p_event_loop(arc_zchronod.clone()));
-
-        // start client websocket
         set.spawn(zchronod::handle_incoming_ws_msg(self.config.ws_url));
-
         set.join_next().await;
         set.abort_all();
-        
-        // tokio::task::spawn(zchronod::p2p_event_loop(arc_zchronod.clone()));
-        // tokio::task::spawn(zchronod::handle_incoming_ws_msg());
 
-        ZchronodResult::Ok(arc_zchronod)
+        Ok(arc_zchronod)
     }
 }

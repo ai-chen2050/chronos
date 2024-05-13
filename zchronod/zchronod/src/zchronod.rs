@@ -160,8 +160,8 @@ pub(crate) async fn p2p_event_loop(arc_zchronod: Arc<Mutex<Zchronod>>) {
 pub(crate) async fn handle_msg(arc_zchronod: Arc<Mutex<Zchronod>>, inner_msg: Innermsg, src: SocketAddr) {
     if let Some(p2p_msg) = &inner_msg.clone().message {
         match inner_msg.identity() {
-            Identity::Cli => handle_cli_msg(inner_msg, p2p_msg, arc_zchronod, src).await,
-            Identity::Ser => handle_ser_msg(inner_msg, p2p_msg, arc_zchronod, src).await,
+            Identity::Client => handle_cli_msg(inner_msg, p2p_msg, arc_zchronod, src).await,
+            Identity::Server => handle_srv_msg(inner_msg, p2p_msg, arc_zchronod, src).await,
             Identity::Init => {todo!()},
         }
     } else {
@@ -169,11 +169,11 @@ pub(crate) async fn handle_msg(arc_zchronod: Arc<Mutex<Zchronod>>, inner_msg: In
     }
 }
 
-async fn handle_ser_msg(inner_msg: Innermsg, p2p_msg: &ZMessage, arc_zchronod: Arc<Mutex<Zchronod>>, src: SocketAddr) {
+async fn handle_srv_msg(inner_msg: Innermsg, p2p_msg: &ZMessage, arc_zchronod: Arc<Mutex<Zchronod>>, src: SocketAddr) {
     let parse_ret = serde_json::from_slice(&p2p_msg.data);
     match parse_ret {
         Err(_) => {
-            println!("\nErr: server_state please to use serde_json serialize");
+            println!("Err: server_state please to use serde_json serialize");
         }
         Ok(input_state) => {
             let (need_broadcast, merged) = arc_zchronod.lock().await.state.merge(&input_state);
@@ -225,9 +225,9 @@ pub(crate) async fn broadcast_state(arc_zchronod: Arc<Mutex<Zchronod>>, inner_ms
     let mut p2p_msg = inner.message.unwrap();
     p2p_msg.data = state_data.to_vec();
     inner.message = Some(p2p_msg);
-    inner.identity = Identity::Ser.into();
+    inner.identity = Identity::Server.into();
     inner.action = Action::WriteReply.into();
-    inner.push_type = PushType::Bc.into();
+    inner.push_type = PushType::Broadcast.into();
 
     let mut buf2 = vec![];
     inner.encode(&mut buf2).unwrap();

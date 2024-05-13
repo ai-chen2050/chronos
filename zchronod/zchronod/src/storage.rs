@@ -30,9 +30,6 @@ impl Storage {
             // zchronod_db,
             pg_db: pg_db_arc,
         }
-        
-        // println!("\nskip new db or storage\n");
-        // Self{}
     }
     
     // postgre inner api
