@@ -8,7 +8,7 @@ use sea_orm::*;
 const DATABASE_PG_URL: &str = "postgres://postgres:hetu@0.0.0.0:5432";
 const DB_NAME: &str = "vlc_inner_db";
 
-pub async fn set_up_db(request_url: &str, db_name: &str) -> Result<DatabaseConnection, DbErr>  { 
+pub async fn setup_db(request_url: &str, db_name: &str) -> Result<DatabaseConnection, DbErr>  {
     let db = Database::connect(request_url).await?;
     let db = match db.get_database_backend() {
        DbBackend::MySql => {
@@ -53,8 +53,8 @@ mod tests {
     use super::*;
 
     #[tokio::test]
-    async fn setup_db() {   // could add the function to server cli command
-        match block_on(set_up_db(DATABASE_PG_URL, DB_NAME)) {
+    async fn set_up_db() {   // could add the function to server cli command
+        match block_on(setup_db(DATABASE_PG_URL, DB_NAME)) {
             Err(err) => {
                 panic!("{}", err);
             }

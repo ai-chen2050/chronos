@@ -18,7 +18,7 @@ fn main() -> std::io::Result<()> {
         buf3 = full_sync_server_message();
     }
     
-    let destination = "0.0.0.0:8050";
+    let destination = "127.0.0.1:8050";
     socket.send_to(&buf3, destination)?;
 
     // recv msg
@@ -77,7 +77,7 @@ fn client_message() -> Vec<u8> {
     };
 
     let inner_msg = Innermsg {
-        identity: Identity::Cli.into(),
+        identity: Identity::Client.into(),
         action: Action::Write.into(),
         message: Some(p2p_msg),
         ..Default::default()
@@ -107,7 +107,7 @@ fn full_sync_server_message() -> Vec<u8> {
     };
 
     let inner_msg = Innermsg {
-        identity: Identity::Ser.into(),
+        identity: Identity::Server.into(),
         action: Action::Write.into(),
         message: Some(p2p_msg),
         ..Default::default()

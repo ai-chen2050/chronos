@@ -10,7 +10,6 @@ pub struct Clock {
 pub struct ClockInfo {
     #[prost(message, optional, tag = "1")]
     pub clock: ::core::option::Option<Clock>,
-    /// id 为node id
     #[prost(bytes = "vec", tag = "2")]
     pub id: ::prost::alloc::vec::Vec<u8>,
     #[prost(bytes = "vec", tag = "3")]

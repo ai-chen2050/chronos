@@ -6,18 +6,18 @@ import "zmessage.proto";
 
 // Innermsg
 message Innermsg {
-    Identity identity = 1;  // for p2p
-    Action action = 2;   // for p2p
+    Identity identity = 1;
+    Action action = 2;
     PushType push_type = 3;        // for vlc
-    zmessage.ZMessage message = 4; 
+    zmessage.ZMessage message = 4;
     repeated bytes public_keys = 5;
     repeated bytes signatures = 6;  // for verifying or threshold signatures
 }
 
 enum Identity {
-    IDENTITY_CLI = 0;  // client
-    IDENTITY_SER = 1;  // server
-    IDENTITY_INIT = 2;  // initializer
+    IDENTITY_CLIENT = 0;
+    IDENTITY_SERVER = 1;
+    IDENTITY_INIT = 2;
 }
 
 enum Action {
@@ -28,6 +28,6 @@ enum Action {
 }
 
 enum PushType {
-	PUSH_TYPE_DM = 0;   // direct msg
-	PUSH_TYPE_BC = 1;   // broadcast
+    PUSH_TYPE_DIRECT = 0;
+    PUSH_TYPE_BROADCAST = 1;
 }

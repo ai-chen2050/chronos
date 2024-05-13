@@ -1,10 +1,9 @@
-use std::sync::{Arc};
+use std::sync::Arc;
 use node_api::config::ZchronodConfig;
 use node_api::error::ZchronodResult;
 use tokio::net::UdpSocket;
-use tokio::sync::{Mutex, RwLock};
-use tokio::task::{JoinHandle, JoinSet};
-use tokio::time::sleep;
+use tokio::sync::RwLock;
+use tokio::task::JoinHandle;
 use crate::{storage, zchronod};
 use crate::zchronod::{ServerState, Zchronod, ZchronodArc};
 
@@ -23,23 +22,25 @@ impl ZchronodFactory {
         self
     }
 
-    pub async fn produce(self) -> ZchronodResult<ZchronodArc> {
-        let storage = storage::Storage::new(self.config.clone()).await;
-
-        /// p2p network pass send && recv
-        // let (p2p_send, p2p_recv) = match zchronod_p2p::spawn_zchronod_p2p().await;
-
-        let cfg = self.config.clone();
-        let socket = UdpSocket::bind(self.config.inner_p2p).await.unwrap();
+    pub async fn create_zchronod(config: ZchronodConfig) -> ZchronodArc {
+        let cfg = config.clone();
+        let address = config.inner_p2p.clone();
+        let socket = UdpSocket::bind(address).await.unwrap();
         let state = ServerState::new("".to_owned());
-        // create arc zchronod node
-        let arc_zchronod = Arc::new(RwLock::new(Zchronod {
+        let storage = storage::Storage::new(config.clone()).await;
+        let zchronod = Zchronod {
             config: cfg,
             socket,
             storage,
-            state
-        }));
-        
+            state,
+        };
+
+        Arc::new(RwLock::new(zchronod))
+    }
+
+    pub async fn initialize_node(self) -> ZchronodResult<ZchronodArc> {
+        let arc_zchronod = ZchronodFactory::create_zchronod(self.config.clone()).await;
+
         let mut join_handles: Vec<JoinHandle<()>> = Vec::new();
         join_handles.push(tokio::spawn(zchronod::p2p_event_loop(arc_zchronod.clone())));
         
@@ -50,6 +51,6 @@ impl ZchronodFactory {
             handle.await.unwrap();
         }
 
-        ZchronodResult::Ok(arc_zchronod)
+        Ok(arc_zchronod)
     }
 }

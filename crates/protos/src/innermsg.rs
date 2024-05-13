@@ -3,10 +3,8 @@
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct Innermsg {
-    /// for p2p
     #[prost(enumeration = "Identity", tag = "1")]
     pub identity: i32,
-    /// for p2p
     #[prost(enumeration = "Action", tag = "2")]
     pub action: i32,
     /// for vlc
@@ -23,11 +21,8 @@ pub struct Innermsg {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
 #[repr(i32)]
 pub enum Identity {
-    /// client
-    Cli = 0,
-    /// server
-    Ser = 1,
-    /// initializer
+    Client = 0,
+    Server = 1,
     Init = 2,
 }
 impl Identity {
@@ -37,16 +32,16 @@ impl Identity {
     /// (if the ProtoBuf definition does not change) and safe for programmatic use.
     pub fn as_str_name(&self) -> &'static str {
         match self {
-            Identity::Cli => "IDENTITY_CLI",
-            Identity::Ser => "IDENTITY_SER",
+            Identity::Client => "IDENTITY_CLIENT",
+            Identity::Server => "IDENTITY_SERVER",
             Identity::Init => "IDENTITY_INIT",
         }
     }
     /// Creates an enum from field names used in the ProtoBuf definition.
     pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
         match value {
-            "IDENTITY_CLI" => Some(Self::Cli),
-            "IDENTITY_SER" => Some(Self::Ser),
+            "IDENTITY_CLIENT" => Some(Self::Client),
+            "IDENTITY_SERVER" => Some(Self::Server),
             "IDENTITY_INIT" => Some(Self::Init),
             _ => None,
         }
@@ -87,10 +82,8 @@ impl Action {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
 #[repr(i32)]
 pub enum PushType {
-    /// direct msg
-    Dm = 0,
-    /// broadcast
-    Bc = 1,
+    Direct = 0,
+    Broadcast = 1,
 }
 impl PushType {
     /// String value of the enum field names used in the ProtoBuf definition.
@@ -99,15 +92,15 @@ impl PushType {
     /// (if the ProtoBuf definition does not change) and safe for programmatic use.
     pub fn as_str_name(&self) -> &'static str {
         match self {
-            PushType::Dm => "PUSH_TYPE_DM",
-            PushType::Bc => "PUSH_TYPE_BC",
+            PushType::Direct => "PUSH_TYPE_DIRECT",
+            PushType::Broadcast => "PUSH_TYPE_BROADCAST",
         }
     }
     /// Creates an enum from field names used in the ProtoBuf definition.
     pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
         match value {
-            "PUSH_TYPE_DM" => Some(Self::Dm),
-            "PUSH_TYPE_BC" => Some(Self::Bc),
+            "PUSH_TYPE_DIRECT" => Some(Self::Direct),
+            "PUSH_TYPE_BROADCAST" => Some(Self::Broadcast),
             _ => None,
         }
     }
