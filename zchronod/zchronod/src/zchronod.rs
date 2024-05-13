@@ -240,7 +240,7 @@ pub(crate) async fn handle_incoming_ws_msg(websocket_url: String) {
     let ws_config = Arc::new(websocket::WebsocketConfig::default());
     let l = websocket::WebsocketListener::bind(ws_config, websocket_url).await.unwrap();
 
-    let addr = l.local_addr().unwrap();
+    let _addr = l.local_addr().unwrap();
 
     let (_send, mut recv) = l.accept().await.unwrap();
 

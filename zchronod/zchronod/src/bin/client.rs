@@ -8,8 +8,8 @@ fn main() -> std::io::Result<()> {
     socket.set_broadcast(true)?;
 
     // now support message: client、full_sync_server
-    let msg_type = "client";
-    let msg_type = "full_sync_server";
+    let msg_type = "client";                    // first step test
+    // let msg_type = "full_sync_server";          // second step test
 
     let mut buf3 = Vec::new();
     if msg_type == "client" {
