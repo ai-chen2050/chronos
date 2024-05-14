@@ -15,13 +15,19 @@ message ZChat {
 // Gateway just only needs read api
 message ZGateway {
     GatewayType type = 1;
-    bytes data = 2;
+    QueryMethod method = 2;
+    bytes data = 3;
 }
 
 enum GatewayType {
   GATEWAY_TYPE_CLOCK_NODE = 0;
   GATEWAY_TYPE_MERGE_LOG = 1;   // ref merge log
   GATEWAY_TYPE_NODE_INFO = 2;  // heartbeat or node info
+}
+
+enum QueryMethod {
+    QUERY_BY_MSGID = 0;
+    QUERY_BY_TABLE_KEYID = 1;
 }
 
 // ZGateway.type = GATEWAY_TYPE_CLOCK_NODE
@@ -37,4 +43,20 @@ message ClockNode {
 // ZGateway.type = GATEWAY_TYPE_NODE_INFO
 message NodeInfo {
     repeated string node_ids = 1;
+}
+
+message QueryResponse {
+    bool success = 1;
+    string reason = 2;
+    bytes data = 3;
+}
+
+// ZGateway.method = QUERY_BY_MSGID
+message QueryByMsgID {
+    string msg_id = 1;
+}
+
+// ZGateway.method = QUERY_BY_TABLE_KEYID
+message QueryByTableKeyID {
+    uint64 last_pos = 1;
 }

@@ -46,7 +46,6 @@ async fn async_main() {
     if let Some(config_path) = args.config_path {
         help_info = false;
         let zchronod_config = construct_node_config(config_path.clone());
-        // let db_root_path = zchronod_config.storage_root_path.unwrap();
 
         //todo metrics init
 

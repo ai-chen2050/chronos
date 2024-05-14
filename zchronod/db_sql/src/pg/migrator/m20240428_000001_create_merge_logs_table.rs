@@ -1,7 +1,5 @@
 use sea_orm_migration::prelude::*;
 
-use super::m20240428_000001_create_clock_infos_table::ClockInfos;
-
 pub struct Migration;
 
 impl MigrationName for Migration {

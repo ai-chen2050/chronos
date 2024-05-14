@@ -1,4 +1,5 @@
 use sea_orm_migration::prelude::*;
+use sea_query::Index;
 pub struct Migration;
 
 impl MigrationName for Migration {
@@ -11,7 +12,7 @@ impl MigrationName for Migration {
 impl MigrationTrait for Migration {
     // Define how to apply this migration: Create the clock_infos table.
     async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
-        manager
+        let rst = manager
             .create_table(
                 Table::create()
                     .table(ClockInfos::Table)
@@ -30,8 +31,31 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(ClockInfos::EventCount).integer().not_null())
                     .col(ColumnDef::new(ClockInfos::CreateAt).timestamp())
                     .to_owned(),
-            )
-            .await
+            ).await;
+
+        if let Err(err) = rst {
+            return Err(err);
+        }    
+        
+        // create index
+        let msgid_index = Index::create()
+            .if_not_exists()
+            .name("idx-clockinfos-messageid")
+            .table(ClockInfos::Table)
+            .col(ClockInfos::MessageId)
+            .to_owned();
+        let rst = manager.create_index(msgid_index).await; 
+        if let Err(err) = rst {
+            return Err(err);
+        }
+
+        let nodeid_index = Index::create()
+            .if_not_exists()
+            .name("idx-clockinfos-nodeid")
+            .table(ClockInfos::Table)
+            .col(ClockInfos::NodeId)
+            .to_owned();
+        manager.create_index(nodeid_index).await
     }
 
     // Define how to rollback this migration: Drop the ClockInfo table.

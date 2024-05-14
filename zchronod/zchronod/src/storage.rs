@@ -1,14 +1,17 @@
+use core::num;
 use std::collections::HashMap;
+use std::fmt::format;
 use std::sync::{Arc, RwLock};
 use chrono::{DateTime, Local, NaiveDateTime};
 use db_sql::pg::entities::merge_logs;
 use node_api::config::ZchronodConfig;
 use db_sql::api::{DbKindZchronod, DbWrite};
 use db_sql::pg::entities::{clock_infos, prelude::{ClockInfos, MergeLogs}};
-use sea_orm::{ActiveValue, Database, DatabaseConnection, EntityTrait};
+use sea_orm::*;
 use sha2::{Sha256, Digest};
 use tools::helper::sha256_str_to_hex;
 use crate::zchronod::ClockInfo;
+use crate::zchronod::MergeLog;
 
 pub struct Storage {
     // pub zchronod_db: DbWrite<DbKindZchronod>,
@@ -49,7 +52,7 @@ impl Storage {
         };
         let res = ClockInfos::insert(clock_info).exec(self.pg_db.as_ref()).await;
         if let Err(err) = res {
-            println!("Insert clock_info error, err: {}", err);
+            eprintln!("Insert clock_info error, err: {}", err);
         }
     }
 
@@ -72,7 +75,62 @@ impl Storage {
         };
         let res = MergeLogs::insert(merge_log).exec(self.pg_db.as_ref()).await;
         if let Err(err) = res {
-            println!("Insert merge_log error, err: {}", err);
+            eprintln!("Insert merge_log error, err: {}", err);
+        }
+    }
+
+    pub async fn get_clock_by_msgid(&self, msg_id: &str) -> Result<ClockInfo, DbErr> {
+        let clock_info = ClockInfos::find().filter(clock_infos::Column::MessageId.eq(msg_id)).one(self.pg_db.as_ref()).await;
+        match clock_info {
+            Err(err) => {
+                eprintln!("Query clockinfos by msg_id error, err: {}", err);
+                Err(err)
+            }
+            Ok(None) => {
+                let err = DbErr::RecordNotFound(format!("when msg_id is {}", msg_id));
+                eprintln!("RecordNotFound: Clock not found for msg_id: {}", msg_id);
+                Err(err)
+            }
+            Ok(Some(clock)) => {
+                let clock_ret: ClockInfo = clock.into();
+                return Ok(clock_ret);
+            }
+        }
+    }
+
+    pub async fn get_clocks_by_keyid(&self, start_id: u64, number: u64) -> Result<Vec<ClockInfo>, DbErr> {
+        let clock_infos= ClockInfos::find()
+            .filter(clock_infos::Column::Id.gt(start_id))
+            .limit(number)
+            .all(self.pg_db.as_ref()).await;
+
+        match clock_infos {
+            Err(err) => {
+                eprintln!("Query clockinfos by start_id error, err: {}", err);
+                Err(err)
+            }
+            Ok(clocks) => {
+                let clock_rets = clocks.iter().map(|clock| (clock.clone().into())).collect();
+                return Ok(clock_rets);
+            }
+        }
+    }
+
+    pub async fn get_mergelogs_by_keyid(&self, start_id: u64, number: u64) -> Result<Vec<MergeLog>, DbErr> {
+        let merge_logs= MergeLogs::find()
+            .filter(merge_logs::Column::Id.gt(start_id))
+            .limit(number)
+            .all(self.pg_db.as_ref()).await;
+
+        match merge_logs {
+            Err(err) => {
+                eprintln!("Query merge_logs by start_id error, err: {}", err);
+                Err(err)
+            }
+            Ok(logs) => {
+                let mergelog_rets = logs.iter().map(|log| (log.clone().into())).collect();
+                return Ok(mergelog_rets);
+            }
         }
     }
 }

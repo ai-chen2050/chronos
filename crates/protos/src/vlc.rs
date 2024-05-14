@@ -7,6 +7,18 @@ pub struct Clock {
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
+pub struct ClockInfos {
+    #[prost(message, repeated, tag = "1")]
+    pub clock_infos: ::prost::alloc::vec::Vec<ClockInfo>,
+}
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct MergeLogs {
+    #[prost(message, repeated, tag = "1")]
+    pub merge_logs: ::prost::alloc::vec::Vec<MergeLog>,
+}
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
 pub struct ClockInfo {
     #[prost(message, optional, tag = "1")]
     pub clock: ::core::option::Option<Clock>,
@@ -30,10 +42,10 @@ pub struct MergeLog {
     pub start_count: u64,
     #[prost(uint64, tag = "4")]
     pub end_count: u64,
-    #[prost(message, optional, tag = "5")]
-    pub s_clock: ::core::option::Option<Clock>,
-    #[prost(message, optional, tag = "6")]
-    pub e_clock: ::core::option::Option<Clock>,
+    #[prost(bytes = "vec", tag = "5")]
+    pub s_clock_hash: ::prost::alloc::vec::Vec<u8>,
+    #[prost(bytes = "vec", tag = "6")]
+    pub e_clock_hash: ::prost::alloc::vec::Vec<u8>,
     #[prost(uint64, tag = "7")]
     pub merge_at: u64,
 }
