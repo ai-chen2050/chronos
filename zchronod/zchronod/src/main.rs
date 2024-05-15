@@ -5,7 +5,7 @@ mod vlc;
 
 use std::path::PathBuf;
 use db_sql::pg::pg_client::setup_db;
-use tools::tokio_zhronod;
+use tools::tokio_zchronod;
 use node_api::config;
 use structopt::StructOpt;
 use node_api::error::{ZchronodConfigError, ZchronodConfigResult, ZchronodError, ZchronodResult};
@@ -24,8 +24,8 @@ struct ZchronodCli {
 }
 
 fn main() {
-    println!("start Zchronod");
-    tokio_zhronod::block_forever_on(async_main());
+    println!("start zchronod server");
+    tokio_zchronod::block_forever_on(async_main());
 }
 
 async fn async_main() {
