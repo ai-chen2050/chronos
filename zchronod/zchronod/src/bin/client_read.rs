@@ -1,6 +1,6 @@
 use prost::Message;
-use std::{collections::{BTreeSet, HashMap}, io::Read, net::UdpSocket};
-use protos::{bussiness::{GatewayType, QueryByMsgId, QueryByTableKeyId, QueryMethod, QueryResponse, ZChat, ZGateway}, innermsg::{Action, Identity, Innermsg}, vlc::{self, Clock, ClockInfo}, zmessage::{ZMessage, ZType}};
+use std::net::UdpSocket;
+use protos::{bussiness::{GatewayType, QueryByMsgId, QueryByTableKeyId, QueryMethod, QueryResponse, ZGateway}, innermsg::{Action, Identity, Innermsg}, zmessage::{ZMessage, ZType}};
 
 fn main() -> std::io::Result<()> {
     let socket = UdpSocket::bind("0.0.0.0:0")?;
@@ -8,7 +8,7 @@ fn main() -> std::io::Result<()> {
 
     // now support message: QueryByMsgid
     let msg_type = "by_msgid";
-    let msg_type = "by_keyid_clockinfos";
+    // let msg_type = "by_keyid_clockinfos";
     // let msg_type = "by_keyid_mergelogs";
 
     let mut data = Vec::new();

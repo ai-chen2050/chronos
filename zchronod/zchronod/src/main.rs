@@ -49,7 +49,7 @@ async fn async_main() {
 
         //todo metrics init
 
-        let zchronod = build_zchronod(zchronod_config.clone()).await;
+        let _zchronod = build_zchronod(zchronod_config.clone()).await;
     }
 
     if help_info {
@@ -95,11 +95,11 @@ async fn build_zchronod(config: ZchronodConfig) -> ZchronodArc {
 fn construct_node_config(config_path: PathBuf) -> config::ZchronodConfig {
     match config::ZchronodConfig::load_config(config_path) {
         Err(ZchronodConfigError::ConfigMissing(_)) => {
-            println!("config path can't found.");
+            eprintln!("config path can't found.");
             std::process::exit(ERROR_CODE);
         }
-        Err(ZchronodConfigError::SerializationError(err)) => {
-            println!("config path can't be serialize");
+        Err(ZchronodConfigError::SerializationError(_)) => {
+            eprintln!("config path can't be serialize");
             std::process::exit(ERROR_CODE);
         }
         result => {
