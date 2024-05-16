@@ -16,7 +16,9 @@ pub struct ZChat {
 pub struct ZGateway {
     #[prost(enumeration = "GatewayType", tag = "1")]
     pub r#type: i32,
-    #[prost(bytes = "vec", tag = "2")]
+    #[prost(enumeration = "QueryMethod", tag = "2")]
+    pub method: i32,
+    #[prost(bytes = "vec", tag = "3")]
     pub data: ::prost::alloc::vec::Vec<u8>,
 }
 /// ZGateway.type = GATEWAY_TYPE_CLOCK_NODE
@@ -42,6 +44,30 @@ pub struct ClockNode {
 pub struct NodeInfo {
     #[prost(string, repeated, tag = "1")]
     pub node_ids: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
+}
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct QueryResponse {
+    #[prost(bool, tag = "1")]
+    pub success: bool,
+    #[prost(string, tag = "2")]
+    pub reason: ::prost::alloc::string::String,
+    #[prost(bytes = "vec", tag = "3")]
+    pub data: ::prost::alloc::vec::Vec<u8>,
+}
+/// ZGateway.method = QUERY_BY_MSGID
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct QueryByMsgId {
+    #[prost(string, tag = "1")]
+    pub msg_id: ::prost::alloc::string::String,
+}
+/// ZGateway.method = QUERY_BY_TABLE_KEYID
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct QueryByTableKeyId {
+    #[prost(uint64, tag = "1")]
+    pub last_pos: u64,
 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
 #[repr(i32)]
@@ -70,6 +96,32 @@ impl GatewayType {
             "GATEWAY_TYPE_CLOCK_NODE" => Some(Self::ClockNode),
             "GATEWAY_TYPE_MERGE_LOG" => Some(Self::MergeLog),
             "GATEWAY_TYPE_NODE_INFO" => Some(Self::NodeInfo),
+            _ => None,
+        }
+    }
+}
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
+#[repr(i32)]
+pub enum QueryMethod {
+    QueryByMsgid = 0,
+    QueryByTableKeyid = 1,
+}
+impl QueryMethod {
+    /// String value of the enum field names used in the ProtoBuf definition.
+    ///
+    /// The values are not transformed in any way and thus are considered stable
+    /// (if the ProtoBuf definition does not change) and safe for programmatic use.
+    pub fn as_str_name(&self) -> &'static str {
+        match self {
+            QueryMethod::QueryByMsgid => "QUERY_BY_MSGID",
+            QueryMethod::QueryByTableKeyid => "QUERY_BY_TABLE_KEYID",
+        }
+    }
+    /// Creates an enum from field names used in the ProtoBuf definition.
+    pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
+        match value {
+            "QUERY_BY_MSGID" => Some(Self::QueryByMsgid),
+            "QUERY_BY_TABLE_KEYID" => Some(Self::QueryByTableKeyid),
             _ => None,
         }
     }

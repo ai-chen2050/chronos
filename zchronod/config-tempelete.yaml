@@ -3,3 +3,4 @@ pg_db_name: "vlc_inner_db"
 outer_p2p: "0.0.0.0:8051"
 inner_p2p: "0.0.0.0:8050"
 ws_url: "0.0.0.0:8052"
+read_maximum: 20

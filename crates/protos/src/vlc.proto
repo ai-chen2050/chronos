@@ -6,6 +6,14 @@ message Clock {
     map<string, uint64> values = 1;
 }
 
+message ClockInfos {
+    repeated ClockInfo clock_infos = 1; 
+}
+
+message MergeLogs {
+    repeated MergeLog merge_logs = 1; 
+}
+
 message ClockInfo {
     Clock clock = 1;
     bytes id = 2;
@@ -19,8 +27,8 @@ message MergeLog {
     bytes to_id = 2;
     uint64 start_count = 3;
     uint64 end_count = 4;
-    Clock s_clock = 5;
-    Clock e_clock = 6;
+    bytes s_clock_hash = 5;
+    bytes e_clock_hash = 6;
     uint64 merge_at = 7;
 }
 

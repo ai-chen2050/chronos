@@ -1,11 +1,15 @@
 //! Verifiable logical clock.
 //!
-//! Please reference create/vlc package.
-//! Only update: Turn the index id to string type.
+//! Please reference create/vlc package. Update contents: 
+//! * 1. Turn the index id to string type.
+//! * 2. New add the clockinfo & mergelog object.
 
 use serde::{Deserialize, Serialize};
 use std::cmp;
 use std::collections::HashMap;
+use db_sql::pg::entities::clock_infos::Model as ClockInfoModel;
+use db_sql::pg::entities::merge_logs::Model as MergeLogModel;
+use protos::vlc::ClockInfo as ProtoClockInfo;
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
 pub struct Clock {
@@ -122,6 +126,101 @@ impl Clock {
         sum == 0
     }
     
+}
+
+/// Clock info sinker to db.
+/// id is server node id, count is the event count in this server.
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct ClockInfo {
+    pub clock: Clock,
+    pub node_id: String,  
+    pub message_id: String,
+    pub count: u128,
+    pub create_at: u128,
+}
+
+impl ClockInfo {
+    pub fn new(clock: Clock, node_id: String, message_id: String, count: u128) -> Self {
+        let create_at = tools::helper::get_time_ms();
+        Self { clock, node_id, message_id, count, create_at }
+    }
+}
+
+impl From<&ProtoClockInfo> for ClockInfo {
+    fn from(protobuf_clock_info: &ProtoClockInfo) -> Self {
+        let clock = protobuf_clock_info
+            .clock
+            .as_ref()
+            .map(|c| {
+                Clock {
+                    values: c
+                        .values
+                        .iter()
+                        .map(|(k, v)| (k.clone(), *v as u128))
+                        .collect(),
+                }
+            }).unwrap();
+
+        let node_id = String::from_utf8_lossy(&protobuf_clock_info.id).into_owned();
+        let message_id = String::from_utf8_lossy(&protobuf_clock_info.message_id).into_owned();
+        let count = protobuf_clock_info.count;
+        let create_at = protobuf_clock_info.create_at;
+
+        ClockInfo {
+            clock,
+            node_id,
+            message_id,
+            count: count.into(),
+            create_at: create_at.into(),
+        }
+    }
+}
+
+impl From<ClockInfoModel> for ClockInfo {
+    fn from(model: ClockInfoModel) -> Self {
+        let clock = Clock {
+            values: serde_json::from_str(&model.clock).unwrap_or_else(|_| HashMap::new()),
+        };
+
+        let create_at = model.create_at.map(|dt| dt.and_utc().timestamp_millis() as u128).unwrap_or(0);
+
+        ClockInfo {
+            clock,
+            node_id: model.node_id,
+            message_id: model.message_id,
+            count: model.event_count as u128,
+            create_at,
+        }
+    }
+}
+
+/// MergeLog sinker to db.
+/// id is server node id, count is the event count in this server.
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct MergeLog {
+    pub from_id: String,
+    pub to_id: String,    // to_node trigger merge action
+    pub start_count: u128,
+    pub end_count: u128,
+    pub s_clock_hash: String,
+    pub e_clock_hash: String,
+    pub merge_at: u128,
+}
+
+impl From<MergeLogModel> for MergeLog {
+    fn from(model: MergeLogModel) -> Self {
+        let merge_at = model.merge_at.and_utc().timestamp_millis() as u128;
+
+        MergeLog {
+            from_id: model.from_id,
+            to_id: model.to_id,
+            start_count: model.start_count as u128,
+            end_count: model.end_count as u128,
+            s_clock_hash: model.s_clock_hash,
+            e_clock_hash: model.e_clock_hash,
+            merge_at,
+        }
+    }
 }
 
 #[cfg(test)]

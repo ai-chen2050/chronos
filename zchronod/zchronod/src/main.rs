@@ -5,7 +5,7 @@ mod vlc;
 
 use std::path::PathBuf;
 use db_sql::pg::pg_client::setup_db;
-use tools::tokio_zhronod;
+use tools::tokio_zchronod;
 use node_api::config;
 use structopt::StructOpt;
 use node_api::error::{ZchronodConfigError, ZchronodConfigResult, ZchronodError, ZchronodResult};
@@ -24,8 +24,8 @@ struct ZchronodCli {
 }
 
 fn main() {
-    println!("start Zchronod");
-    tokio_zhronod::block_forever_on(async_main());
+    println!("start zchronod server");
+    tokio_zchronod::block_forever_on(async_main());
 }
 
 async fn async_main() {
@@ -46,11 +46,10 @@ async fn async_main() {
     if let Some(config_path) = args.config_path {
         help_info = false;
         let zchronod_config = construct_node_config(config_path.clone());
-        // let db_root_path = zchronod_config.storage_root_path.unwrap();
 
         //todo metrics init
 
-        let zchronod = build_zchronod(zchronod_config.clone()).await;
+        let _zchronod = build_zchronod(zchronod_config.clone()).await;
     }
 
     if help_info {
@@ -96,11 +95,11 @@ async fn build_zchronod(config: ZchronodConfig) -> ZchronodArc {
 fn construct_node_config(config_path: PathBuf) -> config::ZchronodConfig {
     match config::ZchronodConfig::load_config(config_path) {
         Err(ZchronodConfigError::ConfigMissing(_)) => {
-            println!("config path can't found.");
+            eprintln!("config path can't found.");
             std::process::exit(ERROR_CODE);
         }
-        Err(ZchronodConfigError::SerializationError(err)) => {
-            println!("config path can't be serialize");
+        Err(ZchronodConfigError::SerializationError(_)) => {
+            eprintln!("config path can't be serialize");
             std::process::exit(ERROR_CODE);
         }
         result => {

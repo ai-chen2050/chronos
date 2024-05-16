@@ -1,9 +1,8 @@
 use futures::executor::block_on;
+use sea_orm::*;
 use sea_orm_migration::prelude::*;
-use sea_orm::{ConnectionTrait, Database, DatabaseConnection, DbBackend, DbErr, Statement};
 use super::migrator::Migrator;
 use super::entities::{prelude::*, *};
-use sea_orm::*;
 
 const DATABASE_PG_URL: &str = "postgres://postgres:hetu@0.0.0.0:5432";
 const DB_NAME: &str = "vlc_inner_db";
@@ -106,7 +105,34 @@ mod tests {
             ClockInfos::insert(clock3).exec(&db).await.expect("insert error");
             let clock_vec = ClockInfos::find().all(&db).await.expect("query error");
             println!("clock_vec-2 = {:?}", clock_vec);
-        }    
-      
+        }
+    }
+
+    #[tokio::test]
+    async fn test_get_clocks_by_msgid() {
+        let url = format!("{}/{}", DATABASE_PG_URL, DB_NAME);
+        let db = Database::connect(&url).await.expect("failed to connect to database");
+        {
+            let msg_id = "todo1";
+            let clock_info = ClockInfos::find().filter(clock_infos::Column::MessageId.eq(msg_id)).all(&db).await.expect("query error");
+            println!("pointed message_id's clocks = {:?}", clock_info);
+        }
+    }
+
+    #[tokio::test]
+    async fn test_get_clocks_from_start_id() {
+        let url = format!("{}/{}", DATABASE_PG_URL, DB_NAME);
+        let db = Database::connect(&url).await.expect("failed to connect to database");
+
+        let start_id = 0;
+
+        let clocks = ClockInfos::find()
+            .filter(clock_infos::Column::Id.gt(start_id))
+            .limit(1)
+            .all(&db)
+            .await
+            .expect("query error");
+
+        println!("clocks = {:?}", clocks);
     }
 }
