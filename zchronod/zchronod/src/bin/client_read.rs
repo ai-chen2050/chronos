@@ -3,28 +3,28 @@ use std::net::UdpSocket;
 use protos::{bussiness::{GatewayType, QueryByMsgId, QueryByTableKeyId, QueryMethod, QueryResponse, ZGateway}, innermsg::{Action, Identity, Innermsg}, zmessage::{ZMessage, ZType}};
 
 fn main() -> std::io::Result<()> {
-    let socket = UdpSocket::bind("0.0.0.0:0")?;
-    socket.set_broadcast(true)?;
+    let socket = UdpSocket::bind("127.0.0.1:34000")
+        .expect("couldn't bind to address");
 
     // now support message: QueryByMsgid
-    let msg_type = "by_msgid";
-    // let msg_type = "by_keyid_clockinfos";
-    // let msg_type = "by_keyid_mergelogs";
+    let msg_type = "by_msg_id";
+    // let msg_type = "by_key_id_clockinfos";
+    // let msg_type = "by_key_id_mergelogs";
 
     let mut data = Vec::new();
-    if msg_type == "by_msgid" {
-        data = by_msgid();
-    } else if msg_type == "by_keyid_clockinfos" {
-        data = by_keyid(GatewayType::ClockNode);
-    } else if msg_type == "by_keyid_mergelogs" {
-        data = by_keyid(GatewayType::MergeLog);
+    if msg_type == "by_msg_id" {
+        data = query_by_msg_id();
+    } else if msg_type == "by_key_id_clockinfos" {
+        data = query_by_key_id(GatewayType::ClockNode);
+    } else if msg_type == "by_key_id_mergelogs" {
+        data = query_by_key_id(GatewayType::MergeLog);
     }
     
     let destination = "127.0.0.1:8050";
     socket.send_to(&data, destination)?;
 
     // recv msg
-    let mut buf = [0; 1024];
+    let mut buf = [0; 65535];
     match socket.recv_from(&mut buf) {
         Ok((size, _)) => {
             let msg = prost::bytes::Bytes::copy_from_slice(&buf[..size]);
@@ -43,7 +43,7 @@ fn main() -> std::io::Result<()> {
     Ok(())
 }
 
-fn by_msgid() -> Vec<u8> {
+fn query_by_msg_id() -> Vec<u8> {
     let msg_id = "todo1";
     let params = QueryByMsgId {
         msg_id: msg_id.to_owned()
@@ -81,7 +81,7 @@ fn by_msgid() -> Vec<u8> {
     buf3
 }
 
-fn by_keyid(gw_type: GatewayType) -> Vec<u8> {
+fn query_by_key_id(gw_type: GatewayType) -> Vec<u8> {
     let start_id = 0;
     let params = QueryByTableKeyId {
         last_pos: start_id,

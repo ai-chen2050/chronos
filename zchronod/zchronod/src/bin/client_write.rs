@@ -4,8 +4,8 @@ use protos::{bussiness::ZChat, innermsg::{Action, Identity, Innermsg}, vlc::{Clo
 use zchronod::zchronod::ServerState;
 
 fn main() -> std::io::Result<()> {
-    let socket = UdpSocket::bind("0.0.0.0:0")?;
-    socket.set_broadcast(true)?;
+    let socket = UdpSocket::bind("127.0.0.1:34000")
+        .expect("couldn't bind to address");
 
     // now support message: client、full_sync_server
     let msg_type = "client";                    // first step test

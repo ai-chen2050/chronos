@@ -12,7 +12,7 @@ impl MigrationName for Migration {
 impl MigrationTrait for Migration {
     // Define how to apply this migration: Create the clock_infos table.
     async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
-        let rst = manager
+        let result = manager
             .create_table(
                 Table::create()
                     .table(ClockInfos::Table)
@@ -33,7 +33,7 @@ impl MigrationTrait for Migration {
                     .to_owned(),
             ).await;
 
-        if let Err(err) = rst {
+        if let Err(err) = result {
             return Err(err);
         }    
         
@@ -44,8 +44,8 @@ impl MigrationTrait for Migration {
             .table(ClockInfos::Table)
             .col(ClockInfos::MessageId)
             .to_owned();
-        let rst = manager.create_index(msgid_index).await; 
-        if let Err(err) = rst {
+        let result = manager.create_index(msgid_index).await; 
+        if let Err(err) = result {
             return Err(err);
         }
 

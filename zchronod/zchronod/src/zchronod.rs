@@ -83,7 +83,7 @@ impl ServerState {
 pub(crate) async fn p2p_event_loop(arc_zchronod: Arc<RwLock<Zchronod>>) {
     println!("Now p2p udp listen on : {}", arc_zchronod.read().await.config.inner_p2p);
     loop {
-        let mut buf = [0; 1500];
+        let mut buf = [0; 65535];
         let (n, src) = arc_zchronod.read().await.socket.recv_from(&mut buf).await.unwrap();
         let msg = prost::bytes::Bytes::copy_from_slice(&buf[..n]);
         if let Ok(m) = Innermsg::decode(msg) {
@@ -184,18 +184,7 @@ async fn query_by_msgid(arc_zchronod: Arc<RwLock<Zchronod>>, inner_msg: Innermsg
                 Err(err) => (false, err.to_string(), None),
             };
 
-            let proto_clock_info = clock_info.map(|clock_info| {
-                ProtoClockInfo {
-                    clock: Some(ProtoClock {
-                        values: clock_info.clock.values.into_iter().map(|(k, v)| (k, v as u64)).collect(),
-                    }),
-                    id: clock_info.node_id.into(),
-                    message_id: clock_info.message_id.into(),
-                    count: clock_info.count as u64,
-                    create_at: clock_info.create_at as u64,
-                }
-            });
-
+            let proto_clock_info = clock_info.map(clockinfo_to_proto());
             let data = &proto_clock_info.map(|info| info.encode_to_vec()).unwrap_or_else(Vec::new);
             let response = make_query_response(success, message, data);
             respond_cli_query(arc_zchronod, inner_msg, &response.encode_to_vec(), src).await;
@@ -236,15 +225,7 @@ async fn query_clockinfo_batch(arc_zchronod: &Arc<RwLock<Zchronod>>, query: Quer
     let proto_clock_infos = clock_infos.map(|clock_infos| {
         clock_infos
             .into_iter()
-            .map(|clock_info| ProtoClockInfo {
-                clock: Some(ProtoClock {
-                    values: clock_info.clock.values.into_iter().map(|(k, v)| (k, v as u64)).collect(),
-                }),
-                id: clock_info.node_id.into(),
-                message_id: clock_info.message_id.into(),
-                count: clock_info.count as u64,
-                create_at: clock_info.create_at as u64,
-            })
+            .map(clockinfo_to_proto())
             .collect::<Vec<_>>()
     });
 
@@ -283,12 +264,11 @@ async fn query_mergelog_batch(arc_zchronod: &Arc<RwLock<Zchronod>>, query: Query
     (success, message, data)
 }
 
-pub(crate) async fn broadcast_srv_state(arc_zchronod: Arc<RwLock<Zchronod>>, inner_msg: Innermsg, src: SocketAddr) {
+pub(crate) async fn broadcast_srv_state(arc_zchronod: Arc<RwLock<Zchronod>>, mut inner: Innermsg, src: SocketAddr) {
     let serde_res = serde_json::to_string(&arc_zchronod.read().await.state);
     let serde_string = &serde_res.unwrap();
     let state_data = serde_string.as_bytes();
 
-    let mut inner = inner_msg;
     let mut p2p_msg = inner.message.unwrap();
     p2p_msg.data = state_data.to_vec();
     inner.message = Some(p2p_msg);
@@ -302,8 +282,7 @@ pub(crate) async fn broadcast_srv_state(arc_zchronod: Arc<RwLock<Zchronod>>, inn
     arc_zchronod.write().await.socket.send_to(&buf, src).await.unwrap();
 }
 
-pub(crate) async fn respond_cli_query(arc_zchronod: Arc<RwLock<Zchronod>>, inner_msg: Innermsg, p2p_data: &[u8] ,src: SocketAddr) {
-    let mut inner = inner_msg;
+pub(crate) async fn respond_cli_query(arc_zchronod: Arc<RwLock<Zchronod>>, mut inner: Innermsg, p2p_data: &[u8] ,src: SocketAddr) {
     let mut p2p_msg = inner.message.unwrap();
     p2p_msg.data = p2p_data.to_vec();
     inner.message = Some(p2p_msg);
@@ -345,4 +324,18 @@ pub fn make_query_response(success: bool, reason: String, data: &[u8]) -> QueryR
     };
 
     response
+}
+
+fn clockinfo_to_proto() -> impl FnMut(ClockInfo) -> ProtoClockInfo {
+    move |clock_info| {
+        ProtoClockInfo {
+            clock: Some(ProtoClock {
+                values: clock_info.clock.values.into_iter().map(|(k, v)| (k, v as u64)).collect(),
+            }),
+            id: clock_info.node_id.into(),
+            message_id: clock_info.message_id.into(),
+            count: clock_info.count as u64,
+            create_at: clock_info.create_at as u64,
+        }
+    }
 }
