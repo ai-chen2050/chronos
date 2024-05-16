@@ -1,7 +1,7 @@
 use std::sync::Arc;
 use node_api::config::ZchronodConfig;
 use node_api::error::ZchronodResult;
-use tokio::net::UdpSocket;
+use tokio::net::{TcpListener, UdpSocket};
 use tokio::sync::RwLock;
 use tokio::task::JoinHandle;
 use crate::{storage, zchronod};
@@ -25,17 +25,18 @@ impl ZchronodFactory {
     pub async fn create_zchronod(config: ZchronodConfig) -> ZchronodArc {
         let cfg = config.clone();
         let address = config.inner_p2p.clone();
-        let socket = UdpSocket::bind(address).await.unwrap();
-        let state = ServerState::new("".to_owned());
+        // let socket = UdpSocket::bind(address).await.unwrap();
+        let listener = TcpListener::bind(address).await.unwrap();
+        let state = RwLock::new(ServerState::new("".to_owned()));
         let storage = storage::Storage::new(config.clone()).await;
         let zchronod = Zchronod {
             config: cfg,
-            socket,
+            listener,
             storage,
             state,
         };
 
-        Arc::new(RwLock::new(zchronod))
+        Arc::new(zchronod)
     }
 
     pub async fn initialize_node(self) -> ZchronodResult<ZchronodArc> {
