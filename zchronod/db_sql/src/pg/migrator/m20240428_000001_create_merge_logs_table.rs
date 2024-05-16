@@ -23,8 +23,8 @@ impl MigrationTrait for Migration {
                             .auto_increment()
                             .primary_key(),
                     )
-                    .col(ColumnDef::new(MergeLogs::FromId).char_len(32).not_null())
-                    .col(ColumnDef::new(MergeLogs::ToId).char_len(32).not_null())
+                    .col(ColumnDef::new(MergeLogs::FromId).char_len(64).not_null())
+                    .col(ColumnDef::new(MergeLogs::ToId).char_len(64).not_null())
                     .col(ColumnDef::new(MergeLogs::StartCount).integer().not_null())
                     .col(ColumnDef::new(MergeLogs::EndCount).integer().not_null())
                     .col(ColumnDef::new(MergeLogs::SClockHash).char_len(64).not_null())
