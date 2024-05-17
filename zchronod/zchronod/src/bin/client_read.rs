@@ -6,18 +6,24 @@ fn main() -> std::io::Result<()> {
     let socket = UdpSocket::bind("127.0.0.1:34000")
         .expect("couldn't bind to address");
 
-    // now support message: QueryByMsgid
-    let msg_type = "by_msg_id";
+    // now support message: five query as follows
+    let msg_type = "by_msg_id_clock";
+    // let msg_type = "by_msg_id_zmessage";
     // let msg_type = "by_key_id_clockinfos";
     // let msg_type = "by_key_id_mergelogs";
+    // let msg_type = "by_key_id_zmessages";
 
     let mut data = Vec::new();
-    if msg_type == "by_msg_id" {
-        data = query_by_msg_id();
+    if msg_type == "by_msg_id_clock" {
+        data = query_by_msg_id(GatewayType::ClockNode);
+    } else if msg_type == "by_msg_id_zmessage" {
+        data = query_by_msg_id(GatewayType::ZMessage);
     } else if msg_type == "by_key_id_clockinfos" {
         data = query_by_key_id(GatewayType::ClockNode);
     } else if msg_type == "by_key_id_mergelogs" {
         data = query_by_key_id(GatewayType::MergeLog);
+    } else if msg_type == "by_key_id_zmessages" {
+        data = query_by_key_id(GatewayType::ZMessage);
     }
     
     let destination = "127.0.0.1:8050";
@@ -43,8 +49,8 @@ fn main() -> std::io::Result<()> {
     Ok(())
 }
 
-fn query_by_msg_id() -> Vec<u8> {
-    let msg_id = "todo1";
+fn query_by_msg_id(gw_type: GatewayType) -> Vec<u8> {
+    let msg_id = "696e746f6279746573                                              ";
     let params = QueryByMsgId {
         msg_id: msg_id.to_owned()
     };
@@ -53,7 +59,7 @@ fn query_by_msg_id() -> Vec<u8> {
     params.encode(&mut buf1).unwrap();
     
     let gateway = ZGateway {
-        r#type: GatewayType::ClockNode.into(),
+        r#type: gw_type.into(),
         method: QueryMethod::QueryByMsgid.into(),
         data: buf1,
     };

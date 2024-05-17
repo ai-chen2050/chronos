@@ -5,6 +5,7 @@
 //! * 2. New add the clockinfo & mergelog object.
 
 use serde::{Deserialize, Serialize};
+use tools::helper::sha256_str_to_hex;
 use std::cmp;
 use std::collections::HashMap;
 use db_sql::pg::entities::clock_infos::Model as ClockInfoModel;
@@ -133,6 +134,7 @@ impl Clock {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ClockInfo {
     pub clock: Clock,
+    pub clock_hash: String,
     pub node_id: String,  
     pub message_id: String,
     pub count: u128,
@@ -140,9 +142,9 @@ pub struct ClockInfo {
 }
 
 impl ClockInfo {
-    pub fn new(clock: Clock, node_id: String, message_id: String, count: u128) -> Self {
+    pub fn new(clock: Clock, clock_hash: String,node_id: String, message_id: String, count: u128) -> Self {
         let create_at = tools::helper::get_time_ms();
-        Self { clock, node_id, message_id, count, create_at }
+        Self { clock, clock_hash, node_id, message_id, count, create_at }
     }
 }
 
@@ -160,7 +162,9 @@ impl From<&ProtoClockInfo> for ClockInfo {
                         .collect(),
                 }
             }).unwrap();
-
+        
+        let clock_str = serde_json::to_string(&clock).unwrap();
+        let clock_hash_hex = sha256_str_to_hex(clock_str.clone());
         let node_id = String::from_utf8_lossy(&protobuf_clock_info.id).into_owned();
         let message_id = String::from_utf8_lossy(&protobuf_clock_info.message_id).into_owned();
         let count = protobuf_clock_info.count;
@@ -168,6 +172,7 @@ impl From<&ProtoClockInfo> for ClockInfo {
 
         ClockInfo {
             clock,
+            clock_hash: clock_hash_hex,
             node_id,
             message_id,
             count: count.into(),
@@ -186,6 +191,7 @@ impl From<ClockInfoModel> for ClockInfo {
 
         ClockInfo {
             clock,
+            clock_hash: model.clock_hash,
             node_id: model.node_id,
             message_id: model.message_id,
             count: model.event_count as u128,

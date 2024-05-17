@@ -17,23 +17,6 @@ pub struct Model {
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
-pub enum Relation {
-    #[sea_orm(
-        belongs_to = "super::clock_infos::Entity",
-        from = "Column::EClockHash",
-        to = "super::clock_infos::Column::ClockHash",
-        on_update = "NoAction",
-        on_delete = "NoAction"
-    )]
-    ClockInfos2,
-    #[sea_orm(
-        belongs_to = "super::clock_infos::Entity",
-        from = "Column::SClockHash",
-        to = "super::clock_infos::Column::ClockHash",
-        on_update = "NoAction",
-        on_delete = "NoAction"
-    )]
-    ClockInfos1,
-}
+pub enum Relation {}
 
 impl ActiveModelBehavior for ActiveModel {}

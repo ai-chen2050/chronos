@@ -23,6 +23,7 @@ enum GatewayType {
   GATEWAY_TYPE_CLOCK_NODE = 0;
   GATEWAY_TYPE_MERGE_LOG = 1;   // ref merge log
   GATEWAY_TYPE_NODE_INFO = 2;  // heartbeat or node info
+  GATEWAY_TYPE_Z_MESSAGE = 3;  // p2p message
 }
 
 enum QueryMethod {
@@ -38,6 +39,10 @@ message ClockNode {
     uint64 count = 4;
     uint64 create_at = 5;
     bytes raw_message = 6;
+}
+
+message ClockNodes {
+    repeated ClockNode clock_nodes = 1;
 }
 
 // ZGateway.type = GATEWAY_TYPE_NODE_INFO

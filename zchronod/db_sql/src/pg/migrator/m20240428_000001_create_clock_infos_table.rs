@@ -26,7 +26,7 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(ClockInfos::Clock).string().not_null())
                     .col(ColumnDef::new(ClockInfos::ClockHash).char_len(64).unique_key().not_null())
                     .col(ColumnDef::new(ClockInfos::NodeId).char_len(64).not_null())
-                    .col(ColumnDef::new(ClockInfos::MessageId).text().not_null())
+                    .col(ColumnDef::new(ClockInfos::MessageId).char_len(64).not_null())
                     .col(ColumnDef::new(ClockInfos::RawMessage).text().not_null())
                     .col(ColumnDef::new(ClockInfos::EventCount).integer().not_null())
                     .col(ColumnDef::new(ClockInfos::CreateAt).timestamp())

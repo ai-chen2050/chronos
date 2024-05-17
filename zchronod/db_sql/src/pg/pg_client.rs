@@ -1,11 +1,7 @@
-use futures::executor::block_on;
 use sea_orm::*;
 use sea_orm_migration::prelude::*;
 use super::migrator::Migrator;
 use super::entities::{prelude::*, *};
-
-const DATABASE_PG_URL: &str = "postgres://postgres:hetu@0.0.0.0:5432";
-const DB_NAME: &str = "vlc_inner_db";
 
 pub async fn setup_db(request_url: &str, db_name: &str) -> Result<DatabaseConnection, DbErr>  {
     let db = Database::connect(request_url).await?;
@@ -43,6 +39,7 @@ pub async fn setup_db(request_url: &str, db_name: &str) -> Result<DatabaseConnec
     Migrator::up(&db.clone(), None).await?;
     assert!(schema_manager.has_table("clock_infos").await?);
     assert!(schema_manager.has_table("merge_logs").await?);
+    assert!(schema_manager.has_table("z_messages").await?);
 
     Ok(db)
 }
@@ -50,6 +47,10 @@ pub async fn setup_db(request_url: &str, db_name: &str) -> Result<DatabaseConnec
 #[cfg(test)]
 mod tests {
     use super::*;
+    use futures::executor::block_on;
+
+    const DATABASE_PG_URL: &str = "postgres://postgres:hetu@0.0.0.0:5432";
+    const DB_NAME: &str = "vlc_inner_db";
 
     #[tokio::test]
     async fn set_up_db() {   // could add the function to server cli command

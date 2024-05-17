@@ -11,7 +11,11 @@ message ZMessage {
     bytes signature = 6;
     bytes from = 7;
     bytes to = 8;
-  }
+}
+
+message ZMessages {
+    repeated ZMessage messages = 1;
+}
 
 enum ZType {
     Z_TYPE_RNG = 0;

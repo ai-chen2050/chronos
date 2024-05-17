@@ -2,3 +2,4 @@
 
 pub use super::clock_infos::Entity as ClockInfos;
 pub use super::merge_logs::Entity as MergeLogs;
+pub use super::z_messages::Entity as ZMessages;

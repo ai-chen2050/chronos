@@ -38,6 +38,12 @@ pub struct ClockNode {
     #[prost(bytes = "vec", tag = "6")]
     pub raw_message: ::prost::alloc::vec::Vec<u8>,
 }
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct ClockNodes {
+    #[prost(message, repeated, tag = "1")]
+    pub clock_nodes: ::prost::alloc::vec::Vec<ClockNode>,
+}
 /// ZGateway.type = GATEWAY_TYPE_NODE_INFO
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
@@ -77,6 +83,8 @@ pub enum GatewayType {
     MergeLog = 1,
     /// heartbeat or node info
     NodeInfo = 2,
+    /// p2p message
+    ZMessage = 3,
 }
 impl GatewayType {
     /// String value of the enum field names used in the ProtoBuf definition.
@@ -88,6 +96,7 @@ impl GatewayType {
             GatewayType::ClockNode => "GATEWAY_TYPE_CLOCK_NODE",
             GatewayType::MergeLog => "GATEWAY_TYPE_MERGE_LOG",
             GatewayType::NodeInfo => "GATEWAY_TYPE_NODE_INFO",
+            GatewayType::ZMessage => "GATEWAY_TYPE_Z_MESSAGE",
         }
     }
     /// Creates an enum from field names used in the ProtoBuf definition.
@@ -96,6 +105,7 @@ impl GatewayType {
             "GATEWAY_TYPE_CLOCK_NODE" => Some(Self::ClockNode),
             "GATEWAY_TYPE_MERGE_LOG" => Some(Self::MergeLog),
             "GATEWAY_TYPE_NODE_INFO" => Some(Self::NodeInfo),
+            "GATEWAY_TYPE_Z_MESSAGE" => Some(Self::ZMessage),
             _ => None,
         }
     }
