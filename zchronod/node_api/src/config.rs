@@ -12,6 +12,7 @@ pub struct ZchronodConfig {
     pub pg_db_name: String,
     pub outer_p2p: Option<String>,
     pub inner_p2p: String,  // vlc server bind udp socket
+    pub node_id: Option<String>,
     pub ws_url: String,
     pub read_maximum: u64,
 }
