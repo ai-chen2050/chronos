@@ -145,7 +145,7 @@ struct ServerState {
     clock_info: ClockInfo,
     id: u128,
     items: Vec<String>, // BtreeSet or HashSet can't keep event inserted order.
-    clock_to_eventid: HashMap<String, String>, // clock_id to event_id
+    clock_to_msgid: HashMap<String, String>, // clock_id to event_id or msg_id
     message_id_set: BTreeSet<String>,
 }
 
@@ -163,7 +163,7 @@ impl ServerState {
             },
             id,
             items: Vec::new(),
-            clock_to_eventid: HashMap::new(),
+            clock_to_msgid: HashMap::new(),
             message_id_set: BTreeSet::new(),
         }
     }
@@ -206,7 +206,7 @@ impl ServerState {
                     let req = ServerMessage::ActiveSync(ActiveSync { diffs: self.items.clone(), latest: self.clock_info.clone(), to: msg.clock_info.id });
                     Some(req)
                 } else {
-                    if let Some(start_msg_id) = self.clock_to_eventid.get(&base.index_key()) {
+                    if let Some(start_msg_id) = self.clock_to_msgid.get(&base.index_key()) {
                         if let Some(diff_msg_ids) = get_suffix(&self.items, start_msg_id.to_string()) {
                             // req diff and send self diff
                             let req = ServerMessage::ActiveSync(ActiveSync { diffs: diff_msg_ids, latest: self.clock_info.clone(), to: msg.clock_info.id });
@@ -229,7 +229,7 @@ impl ServerState {
             return Some(req);
         }
         let empty_str = String::new();
-        let start_msg_id =self.clock_to_eventid.get(&msg.from_clock.clock.index_key()).unwrap_or(&empty_str);
+        let start_msg_id =self.clock_to_msgid.get(&msg.from_clock.clock.index_key()).unwrap_or(&empty_str);
         // get begin from start_msg_id to end of state set
         if let Some(diff_msg_ids) = get_suffix(&self.items, start_msg_id.to_string()) {
             let req = ServerMessage::DiffRsp(DiffRsp { diffs: diff_msg_ids,from:self.clock_info.clone(), to: msg.from_clock.id });
@@ -247,7 +247,7 @@ impl ServerState {
                 self.items.extend(msg.diffs.clone());  // message id represent message 
                 self.clock_info = msg.from.clone();
                 self.clock_info.clock.inc(self.id);
-                self.clock_to_eventid.insert(msg.from.clock.index_key(), msg.from.message_id);
+                self.clock_to_msgid.insert(msg.from.clock.index_key(), msg.from.message_id);
                 self.message_id_set.extend(msg.diffs);
                 return true;
             }
@@ -435,7 +435,7 @@ impl Server {
             create_at: time,
         };
         self.db.write().unwrap().add_clock_infos(key, clock_info.clone());
-        self.state.clock_to_eventid.insert(clock_info.clock.index_key(), message_id.clone());
+        self.state.clock_to_msgid.insert(clock_info.clock.index_key(), message_id.clone());
     }
 
     /// sinker merge action to db

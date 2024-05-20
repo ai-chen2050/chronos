@@ -52,7 +52,8 @@ fn client_message() -> Vec<u8> {
     
     let clock_info = ClockInfo {
         clock,
-        id,
+        node_id:id,
+        clock_hash: Vec::new(),
         message_id,
         count,
         create_at: create_at.try_into().unwrap(),

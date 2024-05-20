@@ -53,7 +53,7 @@ async fn async_main() {
     }
 
     if help_info {
-        println!("\nPlease exec: Zchronod -h for help info.\n")
+        println!("\nPlease exec: zchronod -h for help info.\n")
     }
 }
 

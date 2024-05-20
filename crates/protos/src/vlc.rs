@@ -23,12 +23,14 @@ pub struct ClockInfo {
     #[prost(message, optional, tag = "1")]
     pub clock: ::core::option::Option<Clock>,
     #[prost(bytes = "vec", tag = "2")]
-    pub id: ::prost::alloc::vec::Vec<u8>,
+    pub node_id: ::prost::alloc::vec::Vec<u8>,
     #[prost(bytes = "vec", tag = "3")]
+    pub clock_hash: ::prost::alloc::vec::Vec<u8>,
+    #[prost(bytes = "vec", tag = "4")]
     pub message_id: ::prost::alloc::vec::Vec<u8>,
-    #[prost(uint64, tag = "4")]
-    pub count: u64,
     #[prost(uint64, tag = "5")]
+    pub count: u64,
+    #[prost(uint64, tag = "6")]
     pub create_at: u64,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]

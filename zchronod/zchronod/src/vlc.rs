@@ -165,7 +165,7 @@ impl From<&ProtoClockInfo> for ClockInfo {
         
         let clock_str = serde_json::to_string(&clock).unwrap();
         let clock_hash_hex = sha256_str_to_hex(clock_str.clone());
-        let node_id = String::from_utf8_lossy(&protobuf_clock_info.id).into_owned();
+        let node_id = String::from_utf8_lossy(&protobuf_clock_info.node_id).into_owned();
         let message_id = String::from_utf8_lossy(&protobuf_clock_info.message_id).into_owned();
         let count = protobuf_clock_info.count;
         let create_at = protobuf_clock_info.create_at;

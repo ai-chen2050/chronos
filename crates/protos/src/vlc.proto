@@ -16,10 +16,11 @@ message MergeLogs {
 
 message ClockInfo {
     Clock clock = 1;
-    bytes id = 2;
-    bytes message_id = 3;
-    uint64 count = 4;
-    uint64 create_at = 5;
+    bytes node_id = 2;
+    bytes clock_hash = 3;
+    bytes message_id = 4;
+    uint64 count = 5;
+    uint64 create_at = 6;
 }
 
 message MergeLog {

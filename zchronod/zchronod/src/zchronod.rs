@@ -367,7 +367,8 @@ fn clockinfo_to_proto() -> impl FnMut(ClockInfo) -> ProtoClockInfo {
             clock: Some(ProtoClock {
                 values: clock_info.clock.values.into_iter().map(|(k, v)| (k, v as u64)).collect(),
             }),
-            id: clock_info.node_id.into(),
+            node_id: clock_info.node_id.into(),
+            clock_hash: clock_info.clock_hash.into(),
             message_id: clock_info.message_id.into(),
             count: clock_info.count as u64,
             create_at: clock_info.create_at as u64,
