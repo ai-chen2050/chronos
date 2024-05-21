@@ -33,7 +33,7 @@ impl Zchronod {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ServerState {
     clock_info: ClockInfo,
-    id: String,
+    node_id: String,
     items: BTreeSet<String>,
 }
 
@@ -42,7 +42,7 @@ impl ServerState {
     pub fn new(node_id: String) -> Self {
         Self {
             clock_info: ClockInfo::new(Clock::new(), String::new(), node_id.clone(), "".to_owned(), 0),
-            id: node_id,
+            node_id,
             items: BTreeSet::new(),
         }
     }
@@ -54,7 +54,8 @@ impl ServerState {
             false
         } else {
             self.items.extend(items);
-            self.clock_info.clock.inc(self.id.clone());
+            self.clock_info.clock.inc(self.node_id.clone());
+            self.clock_info.count += 1;
             true
         }
     }
@@ -142,10 +143,9 @@ async fn handle_cli_write_msg(arc_zchronod: Arc<RwLock<Zchronod>>, inner_msg: In
         ZType::Zchat =>{
             let zchat_msg = prost::bytes::Bytes::from(p2p_msg.data.clone());
             let m = ZChat::decode(zchat_msg).unwrap();
-            let prost_clock = m.clock.unwrap();
-            let custom_clock_info: ClockInfo = (&prost_clock).into();
             if arc_zchronod.write().await.state.add(BTreeSet::from_iter(vec![m.message_data.clone()])) {
-                arc_zchronod.write().await.storage.sinker_clock(String::from_utf8(p2p_msg.id.clone()).unwrap(), m.message_data, &custom_clock_info).await;
+                let update_clock_info: ClockInfo = arc_zchronod.read().await.state.clock_info.clone();
+                arc_zchronod.write().await.storage.sinker_clock(String::from_utf8(p2p_msg.id.clone()).unwrap(), m.message_data, &update_clock_info).await;
                 arc_zchronod.write().await.storage.sinker_zmessage(p2p_msg.clone()).await;
                 broadcast_srv_state(arc_zchronod, inner_msg, src).await;
             }
