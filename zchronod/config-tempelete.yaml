@@ -4,4 +4,4 @@ outer_p2p: "0.0.0.0:8051"
 inner_p2p: "0.0.0.0:8050"
 ws_url: "0.0.0.0:8052"
 read_maximum: 20
-node_id: ""
+node_id: "test_one"
