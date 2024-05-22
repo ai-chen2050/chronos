@@ -17,7 +17,7 @@ pub struct Storage {
 }
 
 impl Storage {
-    pub async fn new(config: ZchronodConfig) -> Self {
+    pub async fn new(config: Arc<ZchronodConfig>) -> Self {
         // let zchronod_db = DbWrite::open(
         //     config.storage_root_path.as_ref().unwrap().as_path(),
         //     DbKindZchronod,
@@ -34,7 +34,7 @@ impl Storage {
     }
     
     // postgre inner api
-    pub async fn sinker_clock(&mut self, message_id: String, raw_message: String, clock_info: &ClockInfo) {
+    pub async fn sinker_clock(&self, message_id: String, raw_message: String, clock_info: &ClockInfo) {
         let clock_str = serde_json::to_string(&clock_info.clock).unwrap();
         let hash_hex = sha256_str_to_hex(clock_str.clone());
         let naive_datetime = NaiveDateTime::from_timestamp_millis(clock_info.create_at.try_into().unwrap());
@@ -54,7 +54,7 @@ impl Storage {
         }
     }
 
-    pub async fn sinker_merge_log(&mut self, fclock_info: &ClockInfo, tclock_info: &ClockInfo) {
+    pub async fn sinker_merge_log(&self, fclock_info: &ClockInfo, tclock_info: &ClockInfo) {
         let fclock_str = serde_json::to_string(&fclock_info.clock).unwrap();
         let tclock_str = serde_json::to_string(&tclock_info.clock).unwrap();
         let f_hash_hex = sha256_str_to_hex(fclock_str);
@@ -77,7 +77,7 @@ impl Storage {
         }
     }
 
-    pub async fn sinker_zmessage(&mut self, zmessage: ProtoZMessage) {
+    pub async fn sinker_zmessage(&self, zmessage: ProtoZMessage) {
         let msg_id = hex::encode(zmessage.id);
         let pub_key_hex = hex::encode(zmessage.public_key);
         let from_hex = hex::encode(zmessage.from);

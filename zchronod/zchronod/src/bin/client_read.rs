@@ -7,10 +7,11 @@ use protos::{
     zmessage::{ZMessage, ZType},
     // vlc::ClockInfos
 };
-use std::net::UdpSocket;
+use std::{net::UdpSocket, thread};
 
 fn main() -> std::io::Result<()> {
     let socket = UdpSocket::bind("127.0.0.1:34000").expect("couldn't bind to address");
+    let query_count = 10;
 
     // now support message: five query as follows
     // let msg_type = "by_msg_id_clock";
@@ -33,27 +34,38 @@ fn main() -> std::io::Result<()> {
     }
 
     let destination = "127.0.0.1:8050";
-    socket.send_to(&data, destination)?;
+    let copy_socket = socket.try_clone().unwrap();
+    let spawn = thread::spawn(move || {
+        for _ in 0..query_count {
+            copy_socket.send_to(&data, destination).expect("couldn't send data");
+        }
+    });
 
     // recv msg
-    let mut buf = [0; 65535];
-    match socket.recv_from(&mut buf) {
-        Ok((size, _)) => {
-            let msg = prost::bytes::Bytes::copy_from_slice(&buf[..size]);
-            let response = Innermsg::decode(msg).unwrap();
-            let ret = QueryResponse::decode(response.message.unwrap().data.as_ref()).unwrap();
-            // let clocks = ClockInfos::decode(ret.data.as_ref()).unwrap();
-            println!("Received response: {:?}", ret);
-            // println!("clocks: {:?}", clocks);
+    let mut count = 0;
+    for _ in 0..query_count {
+        count += 1;
+        let mut buf = [0; 65535];
+        match socket.recv_from(&mut buf) {
+            Ok((size, _)) => {
+                let msg = prost::bytes::Bytes::copy_from_slice(&buf[..size]);
+                let response = Innermsg::decode(msg).unwrap();
+                let ret = QueryResponse::decode(response.message.unwrap().data.as_ref()).unwrap();
+                // let clocks = ClockInfos::decode(ret.data.as_ref()).unwrap();
+                println!("Received response: {:?}", ret);
+                // println!("clocks: {:?}", clocks);
+            }
+            Err(ref err) if err.kind() == std::io::ErrorKind::WouldBlock => {
+                println!("No response received.");
+            }
+            Err(err) => {
+                eprintln!("Error receiving response: {}", err);
+            }
         }
-        Err(ref err) if err.kind() == std::io::ErrorKind::WouldBlock => {
-            println!("No response received.");
-        }
-        Err(err) => {
-            eprintln!("Error receiving response: {}", err);
-        }
+        println!("received msg is {} times", count);
     }
 
+    spawn.join().unwrap();
     Ok(())
 }
 
