@@ -4,12 +4,12 @@ use db_sql::pg::entities::{merge_logs, z_messages};
 use node_api::config::ZchronodConfig;
 // use db_sql::api::{DbKindZchronod, DbWrite};
 use db_sql::pg::entities::{clock_infos, prelude::{ClockInfos, MergeLogs, ZMessages}};
-use prost::Message;
 use protos::zmessage::ZMessage as ProtoZMessage;
 use sea_orm::*;
 use tools::helper::sha256_str_to_hex;
 use crate::vlc::ClockInfo;
 use crate::vlc::MergeLog;
+use tracing::error;
 
 pub struct Storage {
     // pub zchronod_db: DbWrite<DbKindZchronod>,
@@ -50,7 +50,7 @@ impl Storage {
         };
         let res = ClockInfos::insert(clock_info).exec(self.pg_db.as_ref()).await;
         if let Err(err) = res {
-            eprintln!("Insert clock_info error, err: {}", err);
+            error!("Insert clock_info error, err: {}", err);
         }
     }
 
@@ -73,7 +73,7 @@ impl Storage {
         };
         let res = MergeLogs::insert(merge_log).exec(self.pg_db.as_ref()).await;
         if let Err(err) = res {
-            eprintln!("Insert merge_log error, err: {}", err);
+            error!("Insert merge_log error, err: {}", err);
         }
     }
 
@@ -95,7 +95,7 @@ impl Storage {
         };
         let res = ZMessages::insert(zmessage).exec(self.pg_db.as_ref()).await;
         if let Err(err) = res {
-            eprintln!("Insert z_messages error, err: {}", err);
+            error!("Insert z_messages error, err: {}", err);
         }
     }
 
@@ -103,12 +103,12 @@ impl Storage {
         let clock_info = ClockInfos::find().filter(clock_infos::Column::MessageId.eq(msg_id)).one(self.pg_db.as_ref()).await;
         match clock_info {
             Err(err) => {
-                eprintln!("Query clockinfos by msg_id error, err: {}", err);
+                error!("Query clockinfos by msg_id error, err: {}", err);
                 Err(err)
             }
             Ok(None) => {
                 let err = DbErr::RecordNotFound(format!("when msg_id is {}", msg_id));
-                eprintln!("RecordNotFound: Clock not found for msg_id: {}", msg_id);
+                error!("RecordNotFound: Clock not found for msg_id: {}", msg_id);
                 Err(err)
             }
             Ok(Some(clock)) => {
@@ -122,12 +122,12 @@ impl Storage {
         let p2p_msg = ZMessages::find().filter(z_messages::Column::MessageId.eq(msg_id)).one(self.pg_db.as_ref()).await;
         match p2p_msg {
             Err(err) => {
-                eprintln!("Query zmessages by msg_id error, err: {}", err);
+                error!("Query zmessages by msg_id error, err: {}", err);
                 Err(err)
             }
             Ok(None) => {
                 let err = DbErr::RecordNotFound(format!("when msg_id is {}", msg_id));
-                eprintln!("RecordNotFound: ZMessage not found for msg_id: {}", msg_id);
+                error!("RecordNotFound: ZMessage not found for msg_id: {}", msg_id);
                 Err(err)
             }
             Ok(Some(zmessage)) => {
@@ -145,7 +145,7 @@ impl Storage {
 
         match clock_infos {
             Err(err) => {
-                eprintln!("Query clockinfos by start_id error, err: {}", err);
+                error!("Query clockinfos by start_id error, err: {}", err);
                 Err(err)
             }
             Ok(clocks) => {
@@ -163,7 +163,7 @@ impl Storage {
 
         match merge_logs {
             Err(err) => {
-                eprintln!("Query merge_logs by start_id error, err: {}", err);
+                error!("Query merge_logs by start_id error, err: {}", err);
                 Err(err)
             }
             Ok(logs) => {
@@ -181,7 +181,7 @@ impl Storage {
 
         match zmessage {
             Err(err) => {
-                eprintln!("Query z_messages by start_id error, err: {}", err);
+                error!("Query z_messages by start_id error, err: {}", err);
                 Err(err)
             }
             Ok(zmessages) => {

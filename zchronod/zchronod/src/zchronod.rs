@@ -14,6 +14,7 @@ use protos::vlc::{MergeLog as ProtoMergeLog, MergeLogs as ProtoMergeLogs};
 use protos::vlc::Clock as ProtoClock;
 use protos::zmessage::{ZMessage, ZType, ZMessages};
 use protos::bussiness::{GatewayType, QueryByMsgId, QueryByTableKeyId, QueryMethod, QueryResponse, ZChat, ZGateway};
+use tracing::*;
 
 pub struct Zchronod {
     pub config: ZchronodConfig,
@@ -50,7 +51,7 @@ impl ServerState {
     /// Add items into the state. Returns true if resulting in a new state.
     pub fn add(&mut self, items: BTreeSet<String>) -> bool {
         if items.is_subset(&self.items) {
-            println!("duplicate message, no action");
+            info!("duplicate message, no action");
             false
         } else {
             self.items.extend(items);
@@ -82,16 +83,16 @@ impl ServerState {
 }
 
 pub(crate) async fn p2p_event_loop(arc_zchronod: Arc<RwLock<Zchronod>>) {
-    println!("Now p2p udp listen on : {}", arc_zchronod.read().await.config.inner_p2p);
+    info!("Now p2p udp listen on : {}", arc_zchronod.read().await.config.inner_p2p);
     loop {
         let mut buf = [0; 65535];
         let (n, src) = arc_zchronod.read().await.socket.recv_from(&mut buf).await.unwrap();
         let msg = prost::bytes::Bytes::copy_from_slice(&buf[..n]);
         if let Ok(m) = Innermsg::decode(msg) {
-            println!("-> Received message from identity: {:?}, action: {:?}", m.identity(), m.action());
+            info!("Received: message from identity: {:?}, action: {:?}", m.identity(), m.action());
             handle_msg(arc_zchronod.clone(), m, src).await;
         } else {
-            println!("No action, only support innermsg type between vlc & p2p modules at now");
+            info!("No action, only support innermsg type between vlc & p2p modules at now");
         }
     }
 }
@@ -104,7 +105,7 @@ pub(crate) async fn handle_msg(arc_zchronod: Arc<RwLock<Zchronod>>, inner_msg: I
             Identity::Init => {todo!()},
         }
     } else {
-        println!("p2p_msg is empty, no action triggered!");
+        info!("p2p_msg is empty, no action triggered!");
     }
 }
 
@@ -112,7 +113,7 @@ async fn handle_srv_msg(inner_msg: Innermsg, p2p_msg: &ZMessage, arc_zchronod: A
     let parse_ret = serde_json::from_slice(&p2p_msg.data);
     match parse_ret {
         Err(_) => {
-            println!("Err: server_state please to use serde_json serialize");
+            info!("Err: server_state please to use serde_json serialize");
         }
         Ok(input_state) => {
             let (need_broadcast, merged) = arc_zchronod.write().await.state.merge(&input_state);
@@ -150,7 +151,7 @@ async fn handle_cli_write_msg(arc_zchronod: Arc<RwLock<Zchronod>>, inner_msg: In
                 broadcast_srv_state(arc_zchronod, inner_msg, src).await;
             }
         }
-        _ => println!("Write: now just support ZType::Zchat = 4!"),
+        _ => info!("Write: now just support ZType::Zchat = 4!"),
     }
 }
 
@@ -164,7 +165,7 @@ async fn handle_cli_read_msg(arc_zchronod: Arc<RwLock<Zchronod>>, inner_msg: Inn
                 QueryMethod::QueryByTableKeyid => query_by_table_keyid(arc_zchronod, inner_msg, m, src).await,
             }
         }
-        _ => println!("Read: now just support ZType::Gateway = 3 todo!"),
+        _ => info!("Read: now just support ZType::Gateway = 3 todo!"),
     }
 }
 
@@ -174,7 +175,7 @@ async fn query_by_msgid(arc_zchronod: Arc<RwLock<Zchronod>>, inner_msg: Innermsg
 
     match params {
         Err(err) => {
-            eprintln!("QueryByMsgid params format error, err={:?}", err);
+            error!("QueryByMsgid params format error, err={:?}", err);
             let response = make_query_response(false, format!("Params format error: {:?}", err), &vec![]);
             respond_cli_query(arc_zchronod, inner_msg, &response.encode_to_vec(), src).await;
         }
@@ -218,7 +219,7 @@ pub async fn query_by_table_keyid(arc_zchronod: Arc<RwLock<Zchronod>>, inner_msg
     let batch_num = arc_zchronod.read().await.config.read_maximum;
     match params {
         Err(err) => {
-            eprintln!("QueryByTableKeyid params format error, err={:?}", err);
+            error!("QueryByTableKeyid params format error, err={:?}", err);
             let response = make_query_response(false, format!("Params format error: {:?}", err), &vec![]);
             respond_cli_query(arc_zchronod, inner_msg, &response.encode_to_vec(), src).await;
         }
@@ -313,8 +314,8 @@ pub(crate) async fn broadcast_srv_state(arc_zchronod: Arc<RwLock<Zchronod>>, mut
 
     let mut buf = vec![];
     inner.encode(&mut buf).unwrap();
-    println!("<- Bd-srv-state: {:?}", inner);
-    arc_zchronod.write().await.socket.send_to(&buf, src).await.unwrap();
+    info!("Response-Srv: {:?}", inner);
+    arc_zchronod.write().await.socket.send_to(&buf, src).await.unwrap_or(0);
 }
 
 pub(crate) async fn respond_cli_query(arc_zchronod: Arc<RwLock<Zchronod>>, mut inner: Innermsg, p2p_data: &[u8] ,src: SocketAddr) {
@@ -327,7 +328,7 @@ pub(crate) async fn respond_cli_query(arc_zchronod: Arc<RwLock<Zchronod>>, mut i
 
     let mut buf = vec![];
     inner.encode(&mut buf).unwrap();
-    println!("<- Response: {:?}", inner);
+    info!("Response-Cli: {:?}", inner);
     arc_zchronod.write().await.socket.send_to(&buf, src).await.unwrap();
 }
 
@@ -363,13 +364,16 @@ pub fn make_query_response(success: bool, reason: String, data: &[u8]) -> QueryR
 
 fn clockinfo_to_proto() -> impl FnMut(ClockInfo) -> ProtoClockInfo {
     move |clock_info| {
+        let node_id = hex::decode(clock_info.node_id).unwrap_or_else(|_| Vec::new());
+        let clock_hash = hex::decode(clock_info.clock_hash).unwrap_or_else(|_| Vec::new());
+        let msg_id = hex::decode(clock_info.message_id).unwrap_or_else(|_| Vec::new());
         ProtoClockInfo {
             clock: Some(ProtoClock {
                 values: clock_info.clock.values.into_iter().map(|(k, v)| (k, v as u64)).collect(),
             }),
-            node_id: clock_info.node_id.into(),
-            clock_hash: clock_info.clock_hash.into(),
-            message_id: clock_info.message_id.into(),
+            node_id,
+            clock_hash,
+            message_id: msg_id,
             count: clock_info.count as u64,
             create_at: clock_info.create_at as u64,
         }

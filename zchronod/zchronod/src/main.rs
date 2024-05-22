@@ -11,6 +11,7 @@ use structopt::StructOpt;
 use node_api::error::{ZchronodConfigError, ZchronodConfigResult, ZchronodError, ZchronodResult};
 use tracing::*;
 use node_api::config::ZchronodConfig;
+use tracing_subscriber::FmtSubscriber;
 use crate::zchronod::ZchronodArc;
 use crate::zchronod::Zchronod;
 
@@ -24,18 +25,22 @@ struct ZchronodCli {
 }
 
 fn main() {
-    println!("start zchronod server");
     tokio_zchronod::block_forever_on(async_main());
 }
 
 async fn async_main() {
+    let fmt_subscriber = FmtSubscriber::new();
+    tracing::subscriber::set_global_default(fmt_subscriber)
+        .expect("set default tracing subscriber fail");
+
+    info!("start zchronod server");
     let mut help_info = true;
     let args = ZchronodCli::from_args();
 
     // init pg db
     if let Some(pg_conn_str) = args.init_pg {
         help_info = false;
-        println!("PostgreSQL connection addr: {}", pg_conn_str);
+        info!("PostgreSQL connection addr: {}", pg_conn_str);
         // Use the PostgreSQL connection string here for initialization
         if !init_db(pg_conn_str).await {
             return;
@@ -53,7 +58,7 @@ async fn async_main() {
     }
 
     if help_info {
-        println!("\nPlease exec: zchronod -h for help info.\n")
+        info!("\nPlease exec: zchronod -h for help info.\n")
     }
 }
 
@@ -62,26 +67,26 @@ async fn init_db(postgres_conn_str: String) -> bool {
         let db_name = url.path().trim_start_matches('/');
         let base_url = url.as_str().trim_end_matches(db_name);
         let is_db_name_empty = db_name == "";
-        println!("Base URL: {}", base_url);
-        println!("Database Name: {}", db_name);
+        info!("Base URL: {}", base_url);
+        info!("Database Name: {}", db_name);
         if is_db_name_empty {
-            println!("Database name is empty, exiting");
+            error!("Database name is empty, exiting");
             return false;
         }
 
         match setup_db(base_url, db_name).await {
             Err(err) => {
-                eprintln!("{}", err);
+                error!("{}", err);
                 false
             }
             Ok(conn) => {
-                println!("Setup database success");
+                info!("Setup database success");
                 let _ = conn.close().await;
                 true
             }
         }
     } else {
-        eprintln!("Invalid PostgreSQL connection string");
+        error!("Invalid PostgreSQL connection string");
         false
     };
 }
@@ -95,11 +100,11 @@ async fn build_zchronod(config: ZchronodConfig) -> ZchronodArc {
 fn construct_node_config(config_path: PathBuf) -> config::ZchronodConfig {
     match config::ZchronodConfig::load_config(config_path) {
         Err(ZchronodConfigError::ConfigMissing(_)) => {
-            eprintln!("config path can't found.");
+            error!("config path can't found.");
             std::process::exit(ERROR_CODE);
         }
         Err(ZchronodConfigError::SerializationError(_)) => {
-            eprintln!("config path can't be serialize");
+            error!("config path can't be serialize");
             std::process::exit(ERROR_CODE);
         }
         result => {
