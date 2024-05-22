@@ -78,7 +78,7 @@ impl Storage {
     }
 
     pub async fn sinker_zmessage(&mut self, zmessage: ProtoZMessage) {
-        let msg_id = String::from_utf8(zmessage.id).unwrap();
+        let msg_id = hex::encode(zmessage.id);
         let pub_key_hex = hex::encode(zmessage.public_key);
         let from_hex = hex::encode(zmessage.from);
         let to_hex = hex::encode(zmessage.to);
@@ -192,11 +192,12 @@ impl Storage {
     }
 
     fn model_to_zmessage(&self, zmessage: z_messages::Model) -> ProtoZMessage {
+        let msg_id = hex::decode(zmessage.message_id).unwrap_or_else(|_| Vec::new());
         let pub_key_bytes = hex::decode(zmessage.public_key.unwrap()).unwrap_or_else(|_| Vec::new());
         let from_bytes = hex::decode(zmessage.from).unwrap_or_else(|_| Vec::new());
         let to_bytes = hex::decode(zmessage.to).unwrap_or_else(|_| Vec::new());
         let msg = ProtoZMessage {
-            id: zmessage.message_id.encode_to_vec(),
+            id: msg_id,
             version: zmessage.version.unwrap() as u32,
             r#type: zmessage.r#type,
             public_key: pub_key_bytes,

@@ -145,7 +145,7 @@ async fn handle_cli_write_msg(arc_zchronod: Arc<RwLock<Zchronod>>, inner_msg: In
             let m = ZChat::decode(zchat_msg).unwrap();
             if arc_zchronod.write().await.state.add(BTreeSet::from_iter(vec![m.message_data.clone()])) {
                 let update_clock_info: ClockInfo = arc_zchronod.read().await.state.clock_info.clone();
-                arc_zchronod.write().await.storage.sinker_clock(String::from_utf8(p2p_msg.id.clone()).unwrap(), m.message_data, &update_clock_info).await;
+                arc_zchronod.write().await.storage.sinker_clock(hex::encode(p2p_msg.id.clone()), m.message_data, &update_clock_info).await;
                 arc_zchronod.write().await.storage.sinker_zmessage(p2p_msg.clone()).await;
                 broadcast_srv_state(arc_zchronod, inner_msg, src).await;
             }
