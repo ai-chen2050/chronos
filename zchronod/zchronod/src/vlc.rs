@@ -12,7 +12,7 @@ use db_sql::pg::entities::clock_infos::Model as ClockInfoModel;
 use db_sql::pg::entities::merge_logs::Model as MergeLogModel;
 use protos::vlc::ClockInfo as ProtoClockInfo;
 
-#[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
+#[derive(Serialize, Deserialize, PartialEq, Clone, Debug, Default)]
 pub struct Clock {
     pub values: HashMap<String, u128>,
 }
@@ -183,10 +183,7 @@ impl From<&ProtoClockInfo> for ClockInfo {
 
 impl From<ClockInfoModel> for ClockInfo {
     fn from(model: ClockInfoModel) -> Self {
-        let clock = Clock {
-            values: serde_json::from_str(&model.clock).unwrap_or_else(|_| HashMap::new()),
-        };
-
+        let clock: Clock = serde_json::from_str(&model.clock).unwrap_or_else(|_| Clock::default());
         let create_at = model.create_at.map(|dt| dt.and_utc().timestamp_millis() as u128).unwrap_or(0);
 
         ClockInfo {
