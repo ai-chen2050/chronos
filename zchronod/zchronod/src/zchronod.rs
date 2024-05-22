@@ -315,7 +315,7 @@ pub(crate) async fn broadcast_srv_state(arc_zchronod: Arc<RwLock<Zchronod>>, mut
     let mut buf = vec![];
     inner.encode(&mut buf).unwrap();
     info!("Response-Srv: {:?}", inner);
-    arc_zchronod.write().await.socket.send_to(&buf, src).await.unwrap();
+    arc_zchronod.write().await.socket.send_to(&buf, src).await.unwrap_or(0);
 }
 
 pub(crate) async fn respond_cli_query(arc_zchronod: Arc<RwLock<Zchronod>>, mut inner: Innermsg, p2p_data: &[u8] ,src: SocketAddr) {
@@ -364,13 +364,16 @@ pub fn make_query_response(success: bool, reason: String, data: &[u8]) -> QueryR
 
 fn clockinfo_to_proto() -> impl FnMut(ClockInfo) -> ProtoClockInfo {
     move |clock_info| {
+        let node_id = hex::decode(clock_info.node_id).unwrap_or_else(|_| Vec::new());
+        let clock_hash = hex::decode(clock_info.clock_hash).unwrap_or_else(|_| Vec::new());
+        let msg_id = hex::decode(clock_info.message_id).unwrap_or_else(|_| Vec::new());
         ProtoClockInfo {
             clock: Some(ProtoClock {
                 values: clock_info.clock.values.into_iter().map(|(k, v)| (k, v as u64)).collect(),
             }),
-            node_id: clock_info.node_id.into(),
-            clock_hash: clock_info.clock_hash.into(),
-            message_id: clock_info.message_id.into(),
+            node_id,
+            clock_hash,
+            message_id: msg_id,
             count: clock_info.count as u64,
             create_at: clock_info.create_at as u64,
         }
