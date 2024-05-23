@@ -2,7 +2,7 @@ use std::any::Any;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use once_cell::sync::Lazy;
-use crate::api::{DbKindT, DbWrite};
+use crate::db_api::{DbKindT, DbWrite};
 use crate::error::DatabaseResult;
 use tracing::error;
 

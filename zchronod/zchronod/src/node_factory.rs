@@ -4,7 +4,7 @@ use node_api::error::ZchronodResult;
 use tokio::net::UdpSocket;
 use tokio::sync::RwLock;
 use tokio::task::JoinHandle;
-use crate::{storage, zchronod};
+use crate::{handler, storage};
 use crate::zchronod::{ServerState, Zchronod, ZchronodArc};
 
 #[derive(Default)]
@@ -43,10 +43,10 @@ impl ZchronodFactory {
         let arc_zchronod = ZchronodFactory::create_zchronod(self.config.clone()).await;
 
         let mut join_handles: Vec<JoinHandle<()>> = Vec::new();
-        join_handles.push(tokio::spawn(zchronod::p2p_event_loop(arc_zchronod.clone())));
+        join_handles.push(tokio::spawn(handler::p2p_event_loop(arc_zchronod.clone())));
         
         // start client websocket
-        join_handles.push(tokio::spawn(zchronod::handle_incoming_ws_msg(self.config.ws_url)));
+        join_handles.push(tokio::spawn(handler::handle_incoming_ws_msg(self.config.ws_url)));
 
         for handle in join_handles {
             handle.await.unwrap();
