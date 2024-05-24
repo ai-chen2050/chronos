@@ -1,9 +1,9 @@
 use crate::{
-    api::{read, write, response::broadcast_srv_state}, 
-    zchronod::ZchronodArc
+    api::{read, write}, 
+    zchronod::ZchronodArc,
 };
 use std::{net::SocketAddr, sync::Arc};
-use protos::zmessage::ZMessage;
+use protos::{vlc::{ClockType, ZClock}, zmessage::{ZMessage, ZType}};
 use websocket::ReceiveMessage;
 use prost::Message;
 use protos::innermsg::{Action, Identity, Innermsg};
@@ -37,22 +37,18 @@ pub(crate) async fn handle_msg(arc_zchronod: ZchronodArc, inner_msg: Innermsg, s
 }
 
 async fn handle_srv_msg(inner_msg: Innermsg, p2p_msg: &ZMessage, arc_zchronod: ZchronodArc, src: SocketAddr) {
-    let parse_ret = serde_json::from_slice(&p2p_msg.data);
-    match parse_ret {
-        Err(_) => {
-            error!("Err: server_state please to use serde_json serialize");
+    match p2p_msg.r#type() {
+        ZType::Clock => {
+            let clock_msg = prost::bytes::Bytes::from(p2p_msg.data.clone());
+            let z_clock = ZClock::decode(clock_msg).unwrap_or(ZClock::default());
+            match z_clock.r#type() {
+                ClockType::EventTrigger => write::handle_srv_event_trigger(z_clock, inner_msg, p2p_msg, arc_zchronod, src).await,
+                ClockType::DiffReq => todo!(),
+                ClockType::DiffRsp => todo!(),
+                ClockType::ActiveSync => todo!(),
+            }
         }
-        Ok(input_state) => {
-            let (need_broadcast, merged) = arc_zchronod.state.write().await.merge(&input_state);
-            if need_broadcast {
-                broadcast_srv_state(arc_zchronod.clone(), inner_msg, src).await;
-            }
-            if merged {
-                let input_clock_info = &input_state.clock_info;
-                let state_clock_info = &arc_zchronod.state.read().await.clock_info.clone();
-                arc_zchronod.storage.sinker_merge_log(input_clock_info, state_clock_info).await;
-            }
-        },
+        _ => error!("Server message: just support ZType::Clock for state sync & clock update!"),
     }
 }
 

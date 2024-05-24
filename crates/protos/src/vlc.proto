@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package vlc;
 
+import "zmessage.proto";
+
 message Clock {
     map<string, uint64> values = 1;
 }
@@ -49,6 +51,7 @@ enum ClockType {
 // Server Clock Message
 message EventTrigger {
     ClockInfo clock_info = 1;
+    zmessage.ZMessage message = 2;
 }
 
 message DiffReq {
@@ -58,12 +61,13 @@ message DiffReq {
 
 message DiffResp {
     bytes to = 1;
-    repeated string diffs = 2;
-    ClockInfo from = 3;
+    uint64 start_index = 2;
+    repeated zmessage.ZMessage diffs = 3;
+    ClockInfo from_clock = 4;
 }
 
 message ActiveSync {
     bytes to = 1;
-    repeated string diffs = 2;
+    repeated zmessage.ZMessage diffs = 2;
     ClockInfo latest = 3;
 }

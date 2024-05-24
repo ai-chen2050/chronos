@@ -1,8 +1,9 @@
 use crate::vlc::ClockInfo;
 use crate::{node_factory::ZchronodFactory, storage::Storage, vlc::Clock};
 use node_api::config::ZchronodConfig;
-use serde::{Deserialize, Serialize};
-use std::{cmp, collections::BTreeSet, sync::Arc};
+use protos::zmessage::ZMessage;
+use std::collections::{BTreeMap, VecDeque};
+use std::{cmp, sync::Arc};
 use tokio::net::UdpSocket;
 use tokio::sync::RwLock;
 use tracing::*;
@@ -22,11 +23,12 @@ impl Zchronod {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+/// A cache state of a server node.
+#[derive(Debug, Clone)]
 pub struct ServerState {
     pub clock_info: ClockInfo,
-    pub node_id: String,
-    pub items: BTreeSet<String>,
+    pub message_ids: VecDeque<String>,
+    pub cache_items: BTreeMap<String, ZMessage>,
 }
 
 impl ServerState {
@@ -40,39 +42,54 @@ impl ServerState {
                 "".to_owned(),
                 0,
             ),
-            node_id,
-            items: BTreeSet::new(),
+            message_ids: VecDeque::new(),
+            cache_items: BTreeMap::new(),
         }
     }
 
     /// Add items into the state. Returns true if resulting in a new state.
-    pub fn add(&mut self, items: BTreeSet<String>) -> bool {
-        if items.is_subset(&self.items) {
-            info!("duplicate message, no action");
-            false
-        } else {
-            self.items.extend(items);
-            self.clock_info.clock.inc(self.node_id.clone());
-            self.clock_info.count += 1;
-            true
+    pub fn add(&mut self, items: Vec<ZMessage>) -> bool {
+        if items.is_empty() {
+            return false;
+        } 
+
+        for item in items.iter() {
+            // filter replicate message id
+            let msg_id = hex::encode(item.id.clone());
+            if !self.cache_items.contains_key(&msg_id)  {
+                if self.message_ids.len() > 500 {
+                    let old_id = self.message_ids.pop_front().unwrap_or(String::new());
+                    self.cache_items.remove(&old_id);
+                }
+                self.message_ids.push_back(msg_id.clone());
+                self.cache_items.insert(msg_id, item.clone());
+            } else {
+                info!("duplicate message_id, skip & no action");
+                continue;
+            }
         }
+
+        self.clock_info.clock.inc(self.clock_info.node_id.clone());
+        self.clock_info.count += 1;
+        if let Some(last) = items.last() {
+            let last_id = hex::encode(last.id.clone());
+            self.clock_info.message_id = last_id;
+        }
+
+        true
     }
 
     /// Merge another ServerState into the current state. Returns true if
     /// resulting in a new state (different from current and received
     /// state).
-    pub fn merge(&mut self, other: &Self) -> (bool, bool) {
-        match self.clock_info.clock.partial_cmp(&other.clock_info.clock) {
+    pub fn merge(&mut self, from_clock: ClockInfo, items: &Vec<ZMessage>) -> (bool, bool) {
+        match self.clock_info.clock.partial_cmp(&from_clock.clock) {
             Some(cmp::Ordering::Equal) => (false, false),
             Some(cmp::Ordering::Greater) => (false, false),
-            Some(cmp::Ordering::Less) => {
-                self.clock_info.clock = other.clock_info.clock.clone();
-                self.items = other.items.clone();
-                (false, true)
-            }
-            None => {
-                self.clock_info.clock.merge(&vec![&other.clock_info.clock]);
-                let added = self.add(other.items.clone());
+            Some(cmp::Ordering::Less) | None => {
+                // todo: can merge when just one event last
+                self.clock_info.clock.merge(&vec![&from_clock.clock]);
+                let added = self.add(items.to_vec());
                 (added, added)
             }
         }

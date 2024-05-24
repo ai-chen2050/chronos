@@ -1,8 +1,6 @@
 use std::net::SocketAddr;
-use crate::vlc::ClockInfo;
 use protos::innermsg::Innermsg;
-use protos::vlc::Clock as ProtoClock;
-use protos::vlc::{ClockInfo as ProtoClockInfo, ClockInfos as ProtoClockInfos};
+use protos::vlc::ClockInfos as ProtoClockInfos;
 use protos::vlc::{MergeLog as ProtoMergeLog, MergeLogs as ProtoMergeLogs};
 use protos::zmessage::{ZMessage, ZType, ZMessages};
 use prost::Message;
@@ -14,6 +12,8 @@ use crate::api::response::{
 use protos::bussiness::{
     GatewayType, QueryByMsgId, QueryByTableKeyId, QueryMethod, ZGateway
 };
+
+use super::response::clockinfo_to_proto;
 
 pub async fn handle_cli_read_msg(arc_zchronod: ZchronodArc, inner_msg: Innermsg, p2p_msg: &ZMessage, src: SocketAddr) {
     match p2p_msg.r#type() {
@@ -158,22 +158,4 @@ async fn query_mergelog_batch(arc_zchronod: &ZchronodArc, query: QueryByTableKey
         .map(|logs| ProtoMergeLogs{merge_logs: logs}.encode_to_vec())
         .unwrap_or_else(Vec::new);
     (success, message, data)
-}
-
-fn clockinfo_to_proto() -> impl FnMut(ClockInfo) -> ProtoClockInfo {
-    move |clock_info| {
-        let node_id = hex::decode(clock_info.node_id).unwrap_or_else(|_| Vec::new());
-        let clock_hash = hex::decode(clock_info.clock_hash).unwrap_or_else(|_| Vec::new());
-        let msg_id = hex::decode(clock_info.message_id).unwrap_or_else(|_| Vec::new());
-        ProtoClockInfo {
-            clock: Some(ProtoClock {
-                values: clock_info.clock.values.into_iter().map(|(k, v)| (k, v as u64)).collect(),
-            }),
-            node_id,
-            clock_hash,
-            message_id: msg_id,
-            count: clock_info.count as u64,
-            create_at: clock_info.create_at as u64,
-        }
-    }
 }

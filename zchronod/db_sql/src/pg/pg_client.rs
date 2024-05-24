@@ -110,6 +110,33 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn insert_zmessage() {
+        let url = format!("{}/{}", DATABASE_PG_URL, DB_NAME);
+        let db = Database::connect(&url).await.expect("failed to connect to database");
+        {
+            let zmessage = z_messages::ActiveModel {
+                id: ActiveValue::Set(2),
+                message_id: ActiveValue::Set("msg_id".to_string()),
+                version: ActiveValue::Set(Some(1)),
+                r#type: ActiveValue::Set(1),
+                public_key: ActiveValue::Set(Some("pub_key_hex".to_owned())),
+                data: ActiveValue::Set(Vec::from("zmessage.data")),
+                signature: ActiveValue::Set(Some(Vec::new())),
+                from: ActiveValue::Set("from_hex".to_owned()),
+                to: ActiveValue::Set("to_hex".to_owned()),
+                ..Default::default()
+            };
+            let res = ZMessages::insert(zmessage).exec(&db).await;
+            if let Err(err) = res {
+                println!("Insert z_messages error, err: {}", err);
+            }
+            let clock_vec = ZMessages::find().order_by_asc(z_messages::Column::Id).all(&db).await.expect("query error");
+            println!("z_message-1 = {:?}", clock_vec);
+        
+        }
+    }
+
+    #[tokio::test]
     async fn test_get_clocks_by_msgid() {
         let url = format!("{}/{}", DATABASE_PG_URL, DB_NAME);
         let db = Database::connect(&url).await.expect("failed to connect to database");

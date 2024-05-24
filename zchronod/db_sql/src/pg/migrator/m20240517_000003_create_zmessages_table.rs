@@ -41,6 +41,7 @@ impl MigrationTrait for Migration {
         // create index
         let msgid_index = Index::create()
             .if_not_exists()
+            .unique()
             .name("idx-zmessages-messageid")
             .table(ZMessages::Table)
             .col(ZMessages::MessageId)

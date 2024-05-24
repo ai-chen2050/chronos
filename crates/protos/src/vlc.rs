@@ -66,6 +66,8 @@ pub struct ZClock {
 pub struct EventTrigger {
     #[prost(message, optional, tag = "1")]
     pub clock_info: ::core::option::Option<ClockInfo>,
+    #[prost(message, optional, tag = "2")]
+    pub message: ::core::option::Option<super::zmessage::ZMessage>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
@@ -80,18 +82,20 @@ pub struct DiffReq {
 pub struct DiffResp {
     #[prost(bytes = "vec", tag = "1")]
     pub to: ::prost::alloc::vec::Vec<u8>,
-    #[prost(string, repeated, tag = "2")]
-    pub diffs: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
-    #[prost(message, optional, tag = "3")]
-    pub from: ::core::option::Option<ClockInfo>,
+    #[prost(uint64, tag = "2")]
+    pub start_index: u64,
+    #[prost(message, repeated, tag = "3")]
+    pub diffs: ::prost::alloc::vec::Vec<super::zmessage::ZMessage>,
+    #[prost(message, optional, tag = "4")]
+    pub from_clock: ::core::option::Option<ClockInfo>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct ActiveSync {
     #[prost(bytes = "vec", tag = "1")]
     pub to: ::prost::alloc::vec::Vec<u8>,
-    #[prost(string, repeated, tag = "2")]
-    pub diffs: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
+    #[prost(message, repeated, tag = "2")]
+    pub diffs: ::prost::alloc::vec::Vec<super::zmessage::ZMessage>,
     #[prost(message, optional, tag = "3")]
     pub latest: ::core::option::Option<ClockInfo>,
 }
