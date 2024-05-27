@@ -11,7 +11,7 @@ use std::{
 };
 
 fn main() -> std::io::Result<()> {
-    let socket = UdpSocket::bind("127.0.0.1:34000").expect("couldn't bind to address");
+    let socket = UdpSocket::bind("127.0.0.1:0").expect("couldn't bind to address");
 
     // now support message: srv_event_trigger_message
     let msg_type = "client";                    // first step test
@@ -50,7 +50,7 @@ fn client_message() -> Vec<u8> {
     let clock_info = make_clock_info();
 
     let zchat = ZChat {
-        message_data: "hello".to_owned(),
+        message_data: Vec::from("hello"),
         clock: Some(clock_info),
     };
 

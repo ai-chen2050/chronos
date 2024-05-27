@@ -34,7 +34,7 @@ impl Storage {
     }
     
     // postgre inner api
-    pub async fn sinker_clock(&self, message_id: String, raw_message: String, clock_info: &ClockInfo) {
+    pub async fn sinker_clock(&self, message_id: String, raw_message: Vec<u8>, clock_info: &ClockInfo) {
         let clock_str = serde_json::to_string(&clock_info.clock).unwrap();
         let hash_hex = sha256_str_to_hex(clock_str.clone());
         let naive_datetime = NaiveDateTime::from_timestamp_millis(clock_info.create_at.try_into().unwrap());

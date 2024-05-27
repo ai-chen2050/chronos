@@ -12,8 +12,8 @@ pub struct Model {
     pub clock_hash: String,
     pub node_id: String,
     pub message_id: String,
-    #[sea_orm(column_type = "Text")]
-    pub raw_message: String,
+    #[sea_orm(column_type = "Binary(BlobSize::Blob(None))")]
+    pub raw_message: Vec<u8>,
     pub event_count: i32,
     pub create_at: Option<DateTime>,
 }

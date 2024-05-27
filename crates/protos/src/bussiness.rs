@@ -4,8 +4,8 @@
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct ZChat {
-    #[prost(string, tag = "1")]
-    pub message_data: ::prost::alloc::string::String,
+    #[prost(bytes = "vec", tag = "1")]
+    pub message_data: ::prost::alloc::vec::Vec<u8>,
     #[prost(message, optional, tag = "2")]
     pub clock: ::core::option::Option<super::vlc::ClockInfo>,
 }

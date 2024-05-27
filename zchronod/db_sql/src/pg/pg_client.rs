@@ -1,7 +1,6 @@
 use sea_orm::*;
 use sea_orm_migration::prelude::*;
 use super::migrator::Migrator;
-use super::entities::{prelude::*, *};
 
 pub async fn setup_db(request_url: &str, db_name: &str) -> Result<DatabaseConnection, DbErr>  {
     let db = Database::connect(request_url).await?;
@@ -47,6 +46,7 @@ pub async fn setup_db(request_url: &str, db_name: &str) -> Result<DatabaseConnec
 #[cfg(test)]
 mod tests {
     use super::*;
+    use super::super::entities::{prelude::*, *};
     use futures::executor::block_on;
 
     const DATABASE_PG_URL: &str = "postgres://postgres:hetu@0.0.0.0:5432";
@@ -58,7 +58,7 @@ mod tests {
             Err(err) => {
                 panic!("{}", err);
             }
-            Ok(db) => async {  }.await,
+            Ok(_db) => async {  }.await,
         }
     }
 
@@ -76,7 +76,7 @@ mod tests {
                 clock_hash: ActiveValue::Set("todo".to_owned()),
                 node_id: ActiveValue::Set("todo".to_owned()),
                 message_id: ActiveValue::Set("todo".to_owned()),
-                raw_message: ActiveValue::Set("todo".to_owned()),
+                raw_message: ActiveValue::Set(Vec::from("todo")),
                 event_count: ActiveValue::Set(1),
                 // create_at: ActiveValue::Set(current_time),
                 ..Default::default()
@@ -91,11 +91,11 @@ mod tests {
                 clock_hash: ActiveValue::Set("todo1".to_owned()),
                 node_id: ActiveValue::Set("todo1".to_owned()),
                 message_id: ActiveValue::Set("todo1".to_owned()),
-                raw_message: ActiveValue::Set("todo1".to_owned()),
+                raw_message: ActiveValue::Set(Vec::from("todo1")),
                 event_count: ActiveValue::Set(2),
                 ..Default::default()
             };
-            clock_info2.clone().update(&db).await;
+            let _ = clock_info2.clone().update(&db).await;
 
             let mut clock3 = clock_info2;
             clock3.id = ActiveValue::Set(2);

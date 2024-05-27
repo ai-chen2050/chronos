@@ -10,7 +10,7 @@ use protos::{
 use std::{net::UdpSocket, thread};
 
 fn main() -> std::io::Result<()> {
-    let socket = UdpSocket::bind("127.0.0.1:34000").expect("couldn't bind to address");
+    let socket = UdpSocket::bind("127.0.0.1:0").expect("couldn't bind to address");
     let query_count = 10;
 
     // now support message: five query as follows

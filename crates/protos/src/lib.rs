@@ -10,7 +10,6 @@ pub fn add(left: usize, right: usize) -> usize {
 #[cfg(test)]
 mod tests {
     use crate::zmessage::ZMessage;
-    use super::*;
 
     #[test]
     fn send_message() {

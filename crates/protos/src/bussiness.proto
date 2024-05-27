@@ -7,7 +7,7 @@ import "vlc.proto";
 // business data
 // ZMessage.type = Z_TYPE_CHAT
 message ZChat {
-	string message_data = 1;
+	bytes message_data = 1;
 	vlc.ClockInfo clock = 2;
 }
 
