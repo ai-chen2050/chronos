@@ -10,7 +10,7 @@ use tracing::*;
 
 use super::response::{broadcast_srv_state, clockinfo_to_proto};
 
-pub async fn handle_cli_write_msg(arc_zchronod: ZchronodArc, inner_msg: Innermsg, p2p_msg: &ZMessage, src: SocketAddr) {
+pub async fn handle_cli_write_msg(arc_zchronod: ZchronodArc,mut inner_msg: Innermsg, p2p_msg: &ZMessage, src: SocketAddr) {
     match p2p_msg.r#type() {
         ZType::Zchat =>{
             let zchat_msg = prost::bytes::Bytes::from(p2p_msg.data.clone());
@@ -29,6 +29,9 @@ pub async fn handle_cli_write_msg(arc_zchronod: ZchronodArc, inner_msg: Innermsg
                     r#type: ClockType::EventTrigger.into(),
                     data: event.encode_to_vec(),
                 };
+                let mut z_msg = inner_msg.message.unwrap();
+                z_msg.r#type = ZType::Clock.into();
+                inner_msg.message = Some(z_msg);
                 broadcast_srv_state(arc_zchronod, inner_msg, &z_clock.encode_to_vec(), src).await;
             }
         }

@@ -11,6 +11,7 @@ impl MigrationName for Migration {
 #[async_trait::async_trait]
 impl MigrationTrait for Migration {
     // Define how to apply this migration: Create the clock_infos table.
+    // or use manager.alter_table(stmt) to update the table for migration.
     async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
         let result = manager
             .create_table(

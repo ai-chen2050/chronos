@@ -11,6 +11,13 @@ message ZChat {
 	vlc.ClockInfo clock = 2;
 }
 
+// ZMessage.type = Z_TYPE_HPOINTS
+message HPoints {
+	bytes op_address = 1;
+	bytes event_id = 2;
+	uint64 points = 3;  // new points
+}
+
 // ZMessage.type = Z_TYPE_GATEWAY
 // Gateway just only needs read api
 message ZGateway {

@@ -9,6 +9,18 @@ pub struct ZChat {
     #[prost(message, optional, tag = "2")]
     pub clock: ::core::option::Option<super::vlc::ClockInfo>,
 }
+/// ZMessage.type = Z_TYPE_HPOINTS
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct HPoints {
+    #[prost(bytes = "vec", tag = "1")]
+    pub op_address: ::prost::alloc::vec::Vec<u8>,
+    #[prost(bytes = "vec", tag = "2")]
+    pub event_id: ::prost::alloc::vec::Vec<u8>,
+    /// new points
+    #[prost(uint64, tag = "3")]
+    pub points: u64,
+}
 /// ZMessage.type = Z_TYPE_GATEWAY
 /// Gateway just only needs read api
 #[allow(clippy::derive_partial_eq_without_eq)]

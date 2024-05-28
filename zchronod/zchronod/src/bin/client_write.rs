@@ -34,6 +34,16 @@ fn main() -> std::io::Result<()> {
             let msg = prost::bytes::Bytes::copy_from_slice(&buf[..size]);
             let response = Innermsg::decode(msg).unwrap();
             println!("Received response: {:?}", response);
+            let zclock_bytes = prost::bytes::Bytes::from(response.message.unwrap().data);
+            let zclock = ZClock::decode(zclock_bytes).unwrap();
+            println!("Received zclock: {:?}", zclock);
+            let ev_bytes = prost::bytes::Bytes::from(zclock.data);
+            let event_trigger = EventTrigger::decode(ev_bytes).unwrap();
+            println!("Received event_trigger: {:?}", event_trigger);
+            let zchat_bytes = prost::bytes::Bytes::from(event_trigger.message.unwrap().data);
+            let zchat = ZChat::decode(zchat_bytes).unwrap();
+            println!("Received zchat: {:?}", zchat);
+            println!("Received message: {:?}", String::from_utf8_lossy(&zchat.message_data).into_owned());
         }
         Err(ref err) if err.kind() == std::io::ErrorKind::WouldBlock => {
             println!("No response received.");
@@ -84,13 +94,18 @@ fn client_message() -> Vec<u8> {
 fn srv_event_trigger_message() -> Vec<u8> {
     let clock_info = make_clock_info();
 
+    let zchat = ZChat {
+        message_data: Vec::from("hello"),
+        clock: None,
+    };
+
     // empty data zmessage
     let inner_state_zmsg = ZMessage {
         id: Vec::from("intobytes"),
         from: Vec::from("msgfrom"),
         to: Vec::from("msg.to"),
         r#type: ZType::Zchat.into(),
-        data: Vec::new(),
+        data: zchat.encode_to_vec(),
         ..Default::default()
     };
 
