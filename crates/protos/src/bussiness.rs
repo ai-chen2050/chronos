@@ -35,29 +35,6 @@ pub struct ZGateway {
     #[prost(bytes = "vec", tag = "4")]
     pub data: ::prost::alloc::vec::Vec<u8>,
 }
-/// ZGateway.type = GATEWAY_TYPE_CLOCK_NODE
-#[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct ClockNode {
-    #[prost(message, optional, tag = "1")]
-    pub clock: ::core::option::Option<super::vlc::Clock>,
-    #[prost(bytes = "vec", tag = "2")]
-    pub id: ::prost::alloc::vec::Vec<u8>,
-    #[prost(bytes = "vec", tag = "3")]
-    pub message_id: ::prost::alloc::vec::Vec<u8>,
-    #[prost(uint64, tag = "4")]
-    pub count: u64,
-    #[prost(uint64, tag = "5")]
-    pub create_at: u64,
-    #[prost(bytes = "vec", tag = "6")]
-    pub raw_message: ::prost::alloc::vec::Vec<u8>,
-}
-#[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct ClockNodes {
-    #[prost(message, repeated, tag = "1")]
-    pub clock_nodes: ::prost::alloc::vec::Vec<ClockNode>,
-}
 /// ZGateway.type = GATEWAY_TYPE_NODE_INFO
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]

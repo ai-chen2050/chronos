@@ -41,18 +41,7 @@ enum QueryMethod {
 }
 
 // ZGateway.type = GATEWAY_TYPE_CLOCK_NODE
-message ClockNode {
-    vlc.Clock clock = 1;
-    bytes id = 2;
-    bytes message_id = 3;
-    uint64 count = 4;
-    uint64 create_at = 5;
-    bytes raw_message = 6;
-}
-
-message ClockNodes {
-    repeated ClockNode clock_nodes = 1;
-}
+// please see ClockInfos in vlc.proto 
 
 // ZGateway.type = GATEWAY_TYPE_NODE_INFO
 message NodeInfo {
