@@ -29,6 +29,10 @@ impl ZchronodFactory {
         let socket = UdpSocket::bind(address).await.unwrap();
         let state = RwLock::new(ServerState::new(node_id));
         let storage = storage::Storage::new(cfg.clone()).await;
+        let latest_clockinfo = storage.get_last_clock().await;
+        if let Ok(clockinfo) = latest_clockinfo {
+            state.write().await.clock_info = clockinfo;
+        }
         let zchronod = Zchronod {
             config: cfg,
             socket,

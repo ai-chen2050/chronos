@@ -19,11 +19,20 @@ pub async fn handle_cli_read_msg(arc_zchronod: ZchronodArc, inner_msg: Innermsg,
     match p2p_msg.r#type() {
         ZType::Gateway =>{
             let gateway_msg = prost::bytes::Bytes::from(p2p_msg.data.clone());
-            let m = ZGateway::decode(gateway_msg).unwrap();
-            match m.method() {
-                QueryMethod::QueryByMsgid => query_by_msgid(arc_zchronod, inner_msg, m, src).await,
-                QueryMethod::QueryByTableKeyid => query_by_table_keyid(arc_zchronod, inner_msg, m, src).await,
-                QueryMethod::QueryStatus => query_status(arc_zchronod, inner_msg, m, src).await,
+            let ret_gateway = ZGateway::decode(gateway_msg);
+            match ret_gateway {
+                Err(err) => {
+                    error!("Decode z_gateway message error, err={:?}", err);
+                    let response = make_query_response(false, format!("Decode ZGateway error: {:?}", err), &vec![], String::new());
+                    respond_cli_query(arc_zchronod, inner_msg, &response.encode_to_vec(), src).await;
+                },
+                Ok(m) => {
+                    match m.method() {
+                        QueryMethod::QueryByMsgid => query_by_msgid(arc_zchronod, inner_msg, m, src).await,
+                        QueryMethod::QueryByTableKeyid => query_by_table_keyid(arc_zchronod, inner_msg, m, src).await,
+                        QueryMethod::QueryStatus => query_status(arc_zchronod, inner_msg, m, src).await,
+                    }
+                },
             }
         }
         _ => info!("Read: now just support ZType::Gateway = 3 todo!"),

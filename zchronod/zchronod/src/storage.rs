@@ -9,7 +9,7 @@ use sea_orm::*;
 use tools::helper::sha256_str_to_hex;
 use crate::vlc::ClockInfo;
 use crate::vlc::MergeLog;
-use tracing::error;
+use tracing::{error, info};
 
 pub struct Storage {
     // pub zchronod_db: DbWrite<DbKindZchronod>,
@@ -109,6 +109,28 @@ impl Storage {
             Ok(None) => {
                 let err = DbErr::RecordNotFound(format!("when msg_id is {}", msg_id));
                 error!("RecordNotFound: Clock not found for msg_id: {}", msg_id);
+                Err(err)
+            }
+            Ok(Some(clock)) => {
+                let clock_ret: ClockInfo = clock.into();
+                return Ok(clock_ret);
+            }
+        }
+    }
+
+    pub async fn get_last_clock(&self) -> Result<ClockInfo, DbErr> {
+        let clock_info = ClockInfos::find()
+            .order_by_desc(clock_infos::Column::Id)
+            .one(self.pg_db.as_ref()).await;
+
+        match clock_info {
+            Err(err) => {
+                error!("Query latest clockinfos error, err: {}", err);
+                Err(err)
+            }
+            Ok(None) => {
+                let err = DbErr::RecordNotFound(format!("empty clockinfo table"));
+                info!("RecordNotFound: empty clockinfo table");
                 Err(err)
             }
             Ok(Some(clock)) => {

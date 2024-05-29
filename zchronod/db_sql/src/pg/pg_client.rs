@@ -176,4 +176,18 @@ mod tests {
 
         println!("clocks = {:?}", clocks);
     }
+
+    #[tokio::test]
+    async fn get_last_clock() {
+        let url = format!("{}/{}", DATABASE_PG_URL, DB_NAME);
+        let db = Database::connect(&url).await.expect("failed to connect to database");
+
+        let clocks = ClockInfos::find()
+            .order_by_desc(clock_infos::Column::Id)
+            .one(&db)
+            .await
+            .expect("query error");
+
+        println!("clocks = {:?}", clocks);
+    }
 }
