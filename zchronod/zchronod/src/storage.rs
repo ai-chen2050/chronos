@@ -191,6 +191,54 @@ impl Storage {
         }
     }
 
+    pub async fn get_clocks_counts(&self) -> Result<u64, DbErr> {
+        let clocks_count= ClockInfos::find()
+            .count(self.pg_db.as_ref())
+            .await;
+
+        match clocks_count {
+            Err(err) => {
+                error!("Query clock_info counts error, err: {}", err);
+                Err(err)
+            }
+            Ok(counts) => {
+                return Ok(counts);
+            }
+        }
+    }
+
+    pub async fn get_mergelogs_counts(&self) -> Result<u64, DbErr> {
+        let mergelog_count= MergeLogs::find()
+            .count(self.pg_db.as_ref())
+            .await;
+
+        match mergelog_count {
+            Err(err) => {
+                error!("Query z_messages counts error, err: {}", err);
+                Err(err)
+            }
+            Ok(counts) => {
+                return Ok(counts);
+            }
+        }
+    }
+
+    pub async fn get_zmessages_counts(&self) -> Result<u64, DbErr> {
+        let zmessage_count= ZMessages::find()
+            .count(self.pg_db.as_ref())
+            .await;
+
+        match zmessage_count {
+            Err(err) => {
+                error!("Query z_messages counts error, err: {}", err);
+                Err(err)
+            }
+            Ok(counts) => {
+                return Ok(counts);
+            }
+        }
+    }
+
     fn model_to_zmessage(&self, zmessage: z_messages::Model) -> ProtoZMessage {
         let msg_id = hex::decode(zmessage.message_id).unwrap_or_else(|_| Vec::new());
         let pub_key_bytes = hex::decode(zmessage.public_key.unwrap()).unwrap_or_else(|_| Vec::new());

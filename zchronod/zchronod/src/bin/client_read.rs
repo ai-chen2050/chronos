@@ -11,7 +11,7 @@ use std::{net::UdpSocket, thread};
 
 fn main() -> std::io::Result<()> {
     let socket = UdpSocket::bind("127.0.0.1:0").expect("couldn't bind to address");
-    let query_count = 10;
+    let query_count = 5;
 
     // now support message: five query as follows
     // let msg_type = "by_msg_id_clock";
@@ -19,6 +19,7 @@ fn main() -> std::io::Result<()> {
     let msg_type = "by_key_id_clockinfos";
     // let msg_type = "by_key_id_mergelogs";
     // let msg_type = "by_key_id_zmessages";
+    // let msg_type = "query_status";
 
     let mut data = Vec::new();
     if msg_type == "by_msg_id_clock" {
@@ -31,6 +32,8 @@ fn main() -> std::io::Result<()> {
         data = query_by_key_id(GatewayType::MergeLog);
     } else if msg_type == "by_key_id_zmessages" {
         data = query_by_key_id(GatewayType::ZMessage);
+    } else if msg_type == "query_status" {
+        data = query_status();
     }
 
     let destination = "127.0.0.1:8050";
@@ -79,6 +82,7 @@ fn query_by_msg_id(gw_type: GatewayType) -> Vec<u8> {
     params.encode(&mut buf1).unwrap();
 
     let gateway = ZGateway {
+        request_id: "query_by_msg_id_for_test".into(),
         r#type: gw_type.into(),
         method: QueryMethod::QueryByMsgid.into(),
         data: buf1,
@@ -112,9 +116,37 @@ fn query_by_key_id(gw_type: GatewayType) -> Vec<u8> {
     let params = QueryByTableKeyId { last_pos: start_id };
 
     let gateway = ZGateway {
+        request_id: "query_by_key_id_for_test".into(),
         r#type: gw_type.into(),
         method: QueryMethod::QueryByTableKeyid.into(),
         data: params.encode_to_vec(),
+    };
+
+    let p2p_msg = ZMessage {
+        r#type: ZType::Gateway.into(),
+        data: gateway.encode_to_vec(),
+        ..Default::default()
+    };
+
+    let inner_msg = Innermsg {
+        identity: Identity::Client.into(),
+        action: Action::Read.into(),
+        message: Some(p2p_msg),
+        ..Default::default()
+    };
+
+    let mut buf3 = vec![];
+    inner_msg.encode(&mut buf3).unwrap();
+    println!("buf3: {:?}", buf3);
+    buf3
+}
+
+fn query_status() -> Vec<u8> {
+    let gateway = ZGateway {
+        request_id: "query_status_for_test".into(),
+        r#type: 0.into(),
+        method: QueryMethod::QueryStatus.into(),
+        data: vec![],
     };
 
     let p2p_msg = ZMessage {

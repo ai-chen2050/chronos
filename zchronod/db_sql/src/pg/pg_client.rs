@@ -163,4 +163,17 @@ mod tests {
 
         println!("clocks = {:?}", clocks);
     }
+
+    #[tokio::test]
+    async fn get_table_counts() {
+        let url = format!("{}/{}", DATABASE_PG_URL, DB_NAME);
+        let db = Database::connect(&url).await.expect("failed to connect to database");
+
+        let clocks = ClockInfos::find()
+            .count(&db)
+            .await
+            .expect("query error");
+
+        println!("clocks = {:?}", clocks);
+    }
 }

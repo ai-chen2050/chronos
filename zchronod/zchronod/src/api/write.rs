@@ -47,6 +47,8 @@ pub async fn handle_srv_event_trigger(z_clock: ZClock, inner_msg: Innermsg, p2p_
     let (need_broadcast, merged) = arc_zchronod.state.write().await.merge(input_clock_info.clone(), &vec!(event.message.unwrap()));
     if need_broadcast {
         broadcast_srv_state(arc_zchronod.clone(), inner_msg, &p2p_msg.data, src).await;
+    } else {
+        info!("clock is bigger or equal, no actions");
     }
     if merged {
         let state_clock_info = &arc_zchronod.state.read().await.clock_info.clone();

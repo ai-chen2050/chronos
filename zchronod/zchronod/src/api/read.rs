@@ -10,7 +10,7 @@ use crate::api::response::{
     make_query_response, respond_cli_query
 };
 use protos::bussiness::{
-    GatewayType, QueryByMsgId, QueryByTableKeyId, QueryMethod, ZGateway
+    GatewayType, QueryByMsgId, QueryByTableKeyId, QueryMethod, QueryStatus, ZGateway
 };
 
 use super::response::clockinfo_to_proto;
@@ -23,6 +23,7 @@ pub async fn handle_cli_read_msg(arc_zchronod: ZchronodArc, inner_msg: Innermsg,
             match m.method() {
                 QueryMethod::QueryByMsgid => query_by_msgid(arc_zchronod, inner_msg, m, src).await,
                 QueryMethod::QueryByTableKeyid => query_by_table_keyid(arc_zchronod, inner_msg, m, src).await,
+                QueryMethod::QueryStatus => query_status(arc_zchronod, inner_msg, m, src).await,
             }
         }
         _ => info!("Read: now just support ZType::Gateway = 3 todo!"),
@@ -30,13 +31,14 @@ pub async fn handle_cli_read_msg(arc_zchronod: ZchronodArc, inner_msg: Innermsg,
 }
 
 async fn query_by_msgid(arc_zchronod: ZchronodArc, inner_msg: Innermsg, m: ZGateway, src: SocketAddr) {
+    info!(target: "Query API", "method = {:?}, type = {:?}, request_id = {}", m.method(), m.r#type(), m.request_id);
     let gateway_data = prost::bytes::Bytes::from(m.data.clone());
     let params = QueryByMsgId::decode(gateway_data);
 
     match params {
         Err(err) => {
             error!("QueryByMsgid params format error, err={:?}", err);
-            let response = make_query_response(false, format!("Params format error: {:?}", err), &vec![]);
+            let response = make_query_response(false, format!("Params format error: {:?}", err), &vec![], m.request_id);
             respond_cli_query(arc_zchronod, inner_msg, &response.encode_to_vec(), src).await;
         }
         Ok(query) => {
@@ -46,7 +48,7 @@ async fn query_by_msgid(arc_zchronod: ZchronodArc, inner_msg: Innermsg, m: ZGate
                 _ => (false, "Not support gateway_type".to_string(), Vec::new()),
             };
 
-            let response = make_query_response(success, message, &data);
+            let response = make_query_response(success, message, &data, m.request_id);
             respond_cli_query(arc_zchronod, inner_msg, &response.encode_to_vec(), src).await;
         }
     }
@@ -74,13 +76,14 @@ async fn query_zmessage_by_msgid(arc_zchronod: &ZchronodArc, query: QueryByMsgId
 }
 
 pub async fn query_by_table_keyid(arc_zchronod: ZchronodArc, inner_msg: Innermsg, m: ZGateway, src: SocketAddr) {
+    info!(target: "Query API", "method = {:?}, type = {:?}, request_id = {}", m.method(), m.r#type(), m.request_id);
     let gateway_data = prost::bytes::Bytes::from(m.data.clone());
     let params = QueryByTableKeyId::decode(gateway_data);
     let batch_num = arc_zchronod.config.read_maximum;
     match params {
         Err(err) => {
             error!("QueryByTableKeyid params format error, err={:?}", err);
-            let response = make_query_response(false, format!("Params format error: {:?}", err), &vec![]);
+            let response = make_query_response(false, format!("Params format error: {:?}", err), &vec![], m.request_id);
             respond_cli_query(arc_zchronod, inner_msg, &response.encode_to_vec(), src).await;
         }
         Ok(query) => {
@@ -90,7 +93,7 @@ pub async fn query_by_table_keyid(arc_zchronod: ZchronodArc, inner_msg: Innermsg
                 GatewayType::ZMessage => query_zmessage_batch(&arc_zchronod, query, batch_num).await,
                 _ => (false, "Not support gateway_type".to_string(), Vec::new()),
             };
-            let response = make_query_response(success, message, &data);
+            let response = make_query_response(success, message, &data, m.request_id);
             respond_cli_query(arc_zchronod, inner_msg, &response.encode_to_vec(), src).await;
         }
     }
@@ -158,4 +161,19 @@ async fn query_mergelog_batch(arc_zchronod: &ZchronodArc, query: QueryByTableKey
         .map(|logs| ProtoMergeLogs{merge_logs: logs}.encode_to_vec())
         .unwrap_or_else(Vec::new);
     (success, message, data)
+}
+
+async fn query_status(arc_zchronod: ZchronodArc, inner_msg: Innermsg, m: ZGateway, src: SocketAddr) {
+    info!(target: "Query API", "method = {:?}, type = {:?}, request_id = {}", m.method(), m.r#type(), m.request_id);
+    let clock_count = arc_zchronod.storage.get_clocks_counts().await.map_or(0, |count| count);
+    let mergelog_count = arc_zchronod.storage.get_mergelogs_counts().await.map_or(0, |count| count);
+    let zmessage_count = arc_zchronod.storage.get_zmessages_counts().await.map_or(0, |count| count);
+    let status = QueryStatus {
+        clock_total: clock_count,
+        mergelog_total: mergelog_count,
+        zmessage_total: zmessage_count,
+    };
+    
+    let response = make_query_response(true, String::new(), &status.encode_to_vec(), m.request_id);
+    respond_cli_query(arc_zchronod, inner_msg, &response.encode_to_vec(), src).await;
 }

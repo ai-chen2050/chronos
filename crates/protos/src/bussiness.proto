@@ -21,9 +21,10 @@ message HPoints {
 // ZMessage.type = Z_TYPE_GATEWAY
 // Gateway just only needs read api
 message ZGateway {
-    GatewayType type = 1;
-    QueryMethod method = 2;
-    bytes data = 3;
+    string request_id = 1;
+    GatewayType type = 2;
+    QueryMethod method = 3;
+    bytes data = 4;
 }
 
 enum GatewayType {
@@ -36,6 +37,7 @@ enum GatewayType {
 enum QueryMethod {
     QUERY_BY_MSGID = 0;
     QUERY_BY_TABLE_KEYID = 1;
+    QUERY_STATUS = 2;
 }
 
 // ZGateway.type = GATEWAY_TYPE_CLOCK_NODE
@@ -58,9 +60,10 @@ message NodeInfo {
 }
 
 message QueryResponse {
-    bool success = 1;
-    string reason = 2;
-    bytes data = 3;
+    string request_id = 1;
+    bool success = 2;
+    string reason = 3;
+    bytes data = 4;
 }
 
 // ZGateway.method = QUERY_BY_MSGID
@@ -71,4 +74,11 @@ message QueryByMsgID {
 // ZGateway.method = QUERY_BY_TABLE_KEYID
 message QueryByTableKeyID {
     uint64 last_pos = 1;
+}
+
+// ZGateway.method = QUERY_STATUS
+message QueryStatus {
+    uint64 clock_total = 1;
+    uint64 mergelog_total = 2;
+    uint64 zmessage_total = 3;
 }

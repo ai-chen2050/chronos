@@ -26,11 +26,13 @@ pub struct HPoints {
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct ZGateway {
-    #[prost(enumeration = "GatewayType", tag = "1")]
+    #[prost(string, tag = "1")]
+    pub request_id: ::prost::alloc::string::String,
+    #[prost(enumeration = "GatewayType", tag = "2")]
     pub r#type: i32,
-    #[prost(enumeration = "QueryMethod", tag = "2")]
+    #[prost(enumeration = "QueryMethod", tag = "3")]
     pub method: i32,
-    #[prost(bytes = "vec", tag = "3")]
+    #[prost(bytes = "vec", tag = "4")]
     pub data: ::prost::alloc::vec::Vec<u8>,
 }
 /// ZGateway.type = GATEWAY_TYPE_CLOCK_NODE
@@ -66,11 +68,13 @@ pub struct NodeInfo {
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct QueryResponse {
-    #[prost(bool, tag = "1")]
+    #[prost(string, tag = "1")]
+    pub request_id: ::prost::alloc::string::String,
+    #[prost(bool, tag = "2")]
     pub success: bool,
-    #[prost(string, tag = "2")]
+    #[prost(string, tag = "3")]
     pub reason: ::prost::alloc::string::String,
-    #[prost(bytes = "vec", tag = "3")]
+    #[prost(bytes = "vec", tag = "4")]
     pub data: ::prost::alloc::vec::Vec<u8>,
 }
 /// ZGateway.method = QUERY_BY_MSGID
@@ -86,6 +90,17 @@ pub struct QueryByMsgId {
 pub struct QueryByTableKeyId {
     #[prost(uint64, tag = "1")]
     pub last_pos: u64,
+}
+/// ZGateway.method = QUERY_STATUS
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct QueryStatus {
+    #[prost(uint64, tag = "1")]
+    pub clock_total: u64,
+    #[prost(uint64, tag = "2")]
+    pub mergelog_total: u64,
+    #[prost(uint64, tag = "3")]
+    pub zmessage_total: u64,
 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
 #[repr(i32)]
@@ -127,6 +142,7 @@ impl GatewayType {
 pub enum QueryMethod {
     QueryByMsgid = 0,
     QueryByTableKeyid = 1,
+    QueryStatus = 2,
 }
 impl QueryMethod {
     /// String value of the enum field names used in the ProtoBuf definition.
@@ -137,6 +153,7 @@ impl QueryMethod {
         match self {
             QueryMethod::QueryByMsgid => "QUERY_BY_MSGID",
             QueryMethod::QueryByTableKeyid => "QUERY_BY_TABLE_KEYID",
+            QueryMethod::QueryStatus => "QUERY_STATUS",
         }
     }
     /// Creates an enum from field names used in the ProtoBuf definition.
@@ -144,6 +161,7 @@ impl QueryMethod {
         match value {
             "QUERY_BY_MSGID" => Some(Self::QueryByMsgid),
             "QUERY_BY_TABLE_KEYID" => Some(Self::QueryByTableKeyid),
+            "QUERY_STATUS" => Some(Self::QueryStatus),
             _ => None,
         }
     }

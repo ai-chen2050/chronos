@@ -10,8 +10,9 @@ use protos::vlc::ClockInfo as ProtoClockInfo;
 use std::net::SocketAddr;
 use tracing::*;
 
-pub fn make_query_response(success: bool, reason: String, data: &[u8]) -> QueryResponse {
+pub fn make_query_response(success: bool, reason: String, data: &[u8], request_id: String) -> QueryResponse {
     let response = QueryResponse {
+        request_id,
         success,
         reason,
         data: data.to_vec(),
