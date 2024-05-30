@@ -18,15 +18,15 @@ impl MigrationTrait for Migration {
                     .table(MergeLogs::Table)
                     .col(
                         ColumnDef::new(MergeLogs::Id)
-                            .integer()
+                            .big_integer()
                             .not_null()
                             .auto_increment()
                             .primary_key(),
                     )
                     .col(ColumnDef::new(MergeLogs::FromId).char_len(64).not_null())
                     .col(ColumnDef::new(MergeLogs::ToId).char_len(64).not_null())
-                    .col(ColumnDef::new(MergeLogs::StartCount).integer().not_null())
-                    .col(ColumnDef::new(MergeLogs::EndCount).integer().not_null())
+                    .col(ColumnDef::new(MergeLogs::StartCount).big_unsigned().not_null())
+                    .col(ColumnDef::new(MergeLogs::EndCount).big_unsigned().not_null())
                     .col(ColumnDef::new(MergeLogs::SClockHash).char_len(64).not_null())
                     .col(ColumnDef::new(MergeLogs::EClockHash).char_len(64).not_null())
                     .col(ColumnDef::new(MergeLogs::MergeAt).timestamp().not_null())

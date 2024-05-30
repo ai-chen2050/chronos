@@ -4,7 +4,7 @@ pub struct Migration;
 
 impl MigrationName for Migration {
     fn name(&self) -> &str {
-        "m20240517_000003_create_zmessages_table"
+        "m_20240517_000003_create_zmessages_table"
     }
 }
 
@@ -17,14 +17,14 @@ impl MigrationTrait for Migration {
                     .table(ZMessages::Table)
                     .col(
                         ColumnDef::new(ZMessages::Id)
-                            .integer()
+                            .big_integer()
                             .not_null()
                             .auto_increment()
                             .primary_key(),
                     )
                     .col(ColumnDef::new(ZMessages::MessageId).char_len(64).not_null())
-                    .col(ColumnDef::new(ZMessages::Version).integer())
-                    .col(ColumnDef::new(ZMessages::Type).integer().not_null())
+                    .col(ColumnDef::new(ZMessages::Version).unsigned())
+                    .col(ColumnDef::new(ZMessages::Type).unsigned().not_null())
                     .col(ColumnDef::new(ZMessages::PublicKey).char_len(64))
                     .col(ColumnDef::new(ZMessages::Data).binary().not_null())
                     .col(ColumnDef::new(ZMessages::Signature).binary())

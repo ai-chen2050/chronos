@@ -6,11 +6,11 @@ use sea_orm::entity::prelude::*;
 #[sea_orm(table_name = "merge_logs")]
 pub struct Model {
     #[sea_orm(primary_key)]
-    pub id: i32,
+    pub id: i64,
     pub from_id: String,
     pub to_id: String,
-    pub start_count: i32,
-    pub end_count: i32,
+    pub start_count: i64,
+    pub end_count: i64,
     pub s_clock_hash: String,
     pub e_clock_hash: String,
     pub merge_at: DateTime,

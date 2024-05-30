@@ -3,20 +3,18 @@
 use sea_orm::entity::prelude::*;
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq)]
-#[sea_orm(table_name = "z_messages")]
+#[sea_orm(table_name = "bussiness_clocks")]
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: i64,
+    pub category: String,
+    pub address: String,
+    pub clock: Json,
+    pub clock_hash: String,
+    pub tag: String,
+    pub event_count: i64,
     pub message_id: String,
-    pub version: Option<i32>,
-    pub r#type: i32,
-    pub public_key: Option<String>,
-    #[sea_orm(column_type = "Binary(BlobSize::Blob(None))")]
-    pub data: Vec<u8>,
-    #[sea_orm(column_type = "Binary(BlobSize::Blob(None))", nullable)]
-    pub signature: Option<Vec<u8>>,
-    pub from: String,
-    pub to: String,
+    pub create_at: Option<DateTime>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

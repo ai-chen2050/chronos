@@ -19,7 +19,7 @@ impl MigrationTrait for Migration {
                     .table(ClockInfos::Table)
                     .col(
                         ColumnDef::new(ClockInfos::Id)
-                            .integer()
+                            .big_integer()
                             .not_null()
                             .auto_increment()
                             .primary_key(),
@@ -29,7 +29,7 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(ClockInfos::NodeId).char_len(64).not_null())
                     .col(ColumnDef::new(ClockInfos::MessageId).char_len(64).not_null())
                     .col(ColumnDef::new(ClockInfos::RawMessage).binary().not_null())
-                    .col(ColumnDef::new(ClockInfos::EventCount).integer().not_null())
+                    .col(ColumnDef::new(ClockInfos::EventCount).big_unsigned().not_null())
                     .col(ColumnDef::new(ClockInfos::CreateAt).timestamp())
                     .to_owned(),
             ).await;

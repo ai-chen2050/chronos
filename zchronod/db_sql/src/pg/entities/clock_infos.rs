@@ -6,7 +6,7 @@ use sea_orm::entity::prelude::*;
 #[sea_orm(table_name = "clock_infos")]
 pub struct Model {
     #[sea_orm(primary_key)]
-    pub id: i32,
+    pub id: i64,
     pub clock: String,
     #[sea_orm(unique)]
     pub clock_hash: String,
@@ -14,7 +14,7 @@ pub struct Model {
     pub message_id: String,
     #[sea_orm(column_type = "Binary(BlobSize::Blob(None))")]
     pub raw_message: Vec<u8>,
-    pub event_count: i32,
+    pub event_count: i64,
     pub create_at: Option<DateTime>,
 }
 

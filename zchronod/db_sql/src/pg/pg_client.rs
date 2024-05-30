@@ -39,6 +39,7 @@ pub async fn setup_db(request_url: &str, db_name: &str) -> Result<DatabaseConnec
     assert!(schema_manager.has_table("clock_infos").await?);
     assert!(schema_manager.has_table("merge_logs").await?);
     assert!(schema_manager.has_table("z_messages").await?);
+    assert!(schema_manager.has_table("bussiness_clocks").await?);
 
     Ok(db)
 }
