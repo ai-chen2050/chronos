@@ -5,8 +5,10 @@ use protos::{
     innermsg::{Action, Identity, Innermsg, PushType},
 };
 use crate::vlc::ClockInfo;
+use crate::vlc::MergeLog;
 use protos::vlc::Clock as ProtoClock;
 use protos::vlc::ClockInfo as ProtoClockInfo;
+use protos::vlc::MergeLog as ProtoMergeLog;
 use std::net::SocketAddr;
 use tracing::*;
 
@@ -35,6 +37,25 @@ pub fn clockinfo_to_proto() -> impl FnMut(ClockInfo) -> ProtoClockInfo {
             message_id: msg_id,
             count: clock_info.count as u64,
             create_at: clock_info.create_at as u64,
+        }
+    }
+}
+
+pub fn mergelog_to_proto() -> impl FnMut(MergeLog) -> ProtoMergeLog {
+    move |merge_log| {
+        let from_id = hex::decode(merge_log.from_id).unwrap_or_else(|_| Vec::new());
+        let to_id = hex::decode(merge_log.to_id).unwrap_or_else(|_| Vec::new());
+        let s_clock_hash = hex::decode(merge_log.s_clock_hash).unwrap_or_else(|_| Vec::new());
+        let e_clock_hash = hex::decode(merge_log.e_clock_hash).unwrap_or_else(|_| Vec::new());
+
+        ProtoMergeLog {
+            from_id,
+            to_id,
+            start_count: merge_log.start_count as u64,
+            end_count: merge_log.end_count as u64,
+            s_clock_hash,
+            e_clock_hash,
+            merge_at: merge_log.merge_at as u64,
         }
     }
 }

@@ -1,19 +1,18 @@
 use std::net::SocketAddr;
 use protos::innermsg::Innermsg;
 use protos::vlc::ClockInfos as ProtoClockInfos;
-use protos::vlc::{MergeLog as ProtoMergeLog, MergeLogs as ProtoMergeLogs};
+use protos::vlc::MergeLogs as ProtoMergeLogs;
 use protos::zmessage::{ZMessage, ZType, ZMessages};
 use prost::Message;
 use crate::zchronod::ZchronodArc;
 use tracing::*;
 use crate::api::response::{
-    make_query_response, respond_cli_query
+    make_query_response, respond_cli_query,
+    clockinfo_to_proto, mergelog_to_proto
 };
 use protos::bussiness::{
     GatewayType, QueryByMsgId, QueryByTableKeyId, QueryMethod, QueryStatus, ZGateway
 };
-
-use super::response::clockinfo_to_proto;
 
 pub async fn handle_cli_read_msg(arc_zchronod: ZchronodArc, inner_msg: Innermsg, p2p_msg: &ZMessage, src: SocketAddr) {
     match p2p_msg.r#type() {
@@ -154,15 +153,7 @@ async fn query_mergelog_batch(arc_zchronod: &ZchronodArc, query: QueryByTableKey
     let proto_merge_logs = merge_logs.map(|merge_logs| {
         merge_logs
             .into_iter()
-            .map(|merge_log| ProtoMergeLog {
-                from_id: merge_log.from_id.into(),
-                to_id: merge_log.to_id.into(),
-                start_count: merge_log.start_count as u64,
-                end_count: merge_log.end_count as u64,
-                s_clock_hash: merge_log.s_clock_hash.into(),
-                e_clock_hash: merge_log.e_clock_hash.into(),
-                merge_at: merge_log.merge_at as u64,
-            })
+            .map(mergelog_to_proto())
             .collect::<Vec<_>>()
     });
 
