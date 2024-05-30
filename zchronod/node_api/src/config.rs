@@ -7,14 +7,35 @@ use serde::Serialize;
 /// Zchronod Node Config
 #[derive(Clone, Deserialize, Serialize, Debug, Default)]
 pub struct ZchronodConfig {
+    pub db: DbConfig,
+    pub net: NetworkConfig,
+    pub node: NodeConfig,
+    pub api: ApiConfig,
+}
+
+#[derive(Clone, Deserialize, Serialize, Debug, Default)]
+pub struct DbConfig {
     pub storage_root_path: Option<StorageRootPath>,
     pub pg_db_url: String,
     pub pg_db_name: String,
+}
+
+#[derive(Clone, Deserialize, Serialize, Debug, Default)]
+pub struct NetworkConfig {
+    pub inner_p2p: String,          // vlc server bind udp socket
     pub outer_p2p: Option<String>,
-    pub inner_p2p: String,  // vlc server bind udp socket
+    pub ws_url: String
+}
+
+#[derive(Clone, Deserialize, Serialize, Debug, Default)]
+pub struct NodeConfig {
     pub node_id: Option<String>,
-    pub ws_url: String,
-    pub read_maximum: u64,
+    pub cache_msg_maximum: u64,
+}
+
+#[derive(Clone, Deserialize, Serialize, Debug, Default)]
+pub struct ApiConfig {
+   pub read_maximum: u64,
 }
 
 #[derive(Clone, serde::Serialize, serde::Deserialize, Debug, Default)]

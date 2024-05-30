@@ -10,7 +10,7 @@ use protos::innermsg::{Action, Identity, Innermsg};
 use tracing::*;
 
 pub(crate) async fn p2p_event_loop(arc_zchronod: ZchronodArc) {
-    info!("Now p2p udp listen on : {}", arc_zchronod.config.inner_p2p);
+    info!("Now p2p udp listen on : {}", arc_zchronod.config.net.inner_p2p);
     loop {
         let mut buf = [0; 65535];
         let (n, src) = arc_zchronod.socket.recv_from(&mut buf).await.unwrap();

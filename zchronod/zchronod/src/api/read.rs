@@ -87,7 +87,7 @@ pub async fn query_by_table_keyid(arc_zchronod: ZchronodArc, inner_msg: Innermsg
     info!(target: "Query API", "method = {:?}, type = {:?}, request_id = {}", m.method(), m.r#type(), m.request_id);
     let gateway_data = prost::bytes::Bytes::from(m.data.clone());
     let params = QueryByTableKeyId::decode(gateway_data);
-    let batch_num = arc_zchronod.config.read_maximum;
+    let batch_num = arc_zchronod.config.api.read_maximum;
     match params {
         Err(err) => {
             error!("QueryByTableKeyid params format error, err={:?}", err);

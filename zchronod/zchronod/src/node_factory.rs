@@ -24,10 +24,10 @@ impl ZchronodFactory {
 
     pub async fn create_zchronod(config: ZchronodConfig) -> ZchronodArc {
         let cfg = Arc::new(config.clone());
-        let address = config.inner_p2p.clone();
-        let node_id = config.node_id.clone().unwrap_or(String::new());
+        let address = config.net.inner_p2p.clone();
+        let node_id = config.node.node_id.clone().unwrap_or(String::new());
         let socket = UdpSocket::bind(address).await.unwrap();
-        let state = RwLock::new(ServerState::new(node_id));
+        let state = RwLock::new(ServerState::new(node_id, cfg.node.cache_msg_maximum));
         let storage = storage::Storage::new(cfg.clone()).await;
         let latest_clockinfo = storage.get_last_clock().await;
         if let Ok(clockinfo) = latest_clockinfo {
@@ -50,7 +50,7 @@ impl ZchronodFactory {
         join_handles.push(tokio::spawn(handler::p2p_event_loop(arc_zchronod.clone())));
         
         // start client websocket
-        join_handles.push(tokio::spawn(handler::handle_incoming_ws_msg(self.config.ws_url)));
+        join_handles.push(tokio::spawn(handler::handle_incoming_ws_msg(self.config.net.ws_url)));
 
         for handle in join_handles {
             handle.await.unwrap();

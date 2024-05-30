@@ -29,11 +29,12 @@ pub struct ServerState {
     pub clock_info: ClockInfo,
     pub message_ids: VecDeque<String>,
     pub cache_items: BTreeMap<String, ZMessage>,
+    pub cache_maximum: u64,
 }
 
 impl ServerState {
     /// Create a new server state.
-    pub fn new(node_id: String) -> Self {
+    pub fn new(node_id: String, cache_maximum: u64) -> Self {
         Self {
             clock_info: ClockInfo::new(
                 Clock::new(),
@@ -44,6 +45,7 @@ impl ServerState {
             ),
             message_ids: VecDeque::new(),
             cache_items: BTreeMap::new(),
+            cache_maximum,
         }
     }
 

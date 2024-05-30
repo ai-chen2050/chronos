@@ -24,7 +24,7 @@ impl Storage {
         // ).unwrap(); // todo error handling
         
         // connect to pg db
-        let url = format!("{}/{}", config.pg_db_url, config.pg_db_name);
+        let url = format!("{}/{}", config.db.pg_db_url, config.db.pg_db_name);
         let pg_db = Database::connect(&url).await.expect("failed to connect to database");
         let pg_db_arc = Arc::new(pg_db);
         Self {
