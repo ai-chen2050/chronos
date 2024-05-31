@@ -106,7 +106,11 @@ fn construct_node_config(config_path: PathBuf) -> config::ZchronodConfig {
             std::process::exit(ERROR_CODE);
         }
         Err(ZchronodConfigError::SerializationError(_)) => {
-            error!("config path can't be serialize");
+            error!("config file can't be serialize, bad yaml format");
+            std::process::exit(ERROR_CODE);
+        }
+        Err(ZchronodConfigError::IllegalNodeId) => {
+            error!("nodeid illegal, must be hex format, and 64 bits");
             std::process::exit(ERROR_CODE);
         }
         result => {

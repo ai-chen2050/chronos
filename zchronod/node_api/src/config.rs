@@ -3,6 +3,7 @@ use std::path::Path;
 use crate::error::{ZchronodConfigError, ZchronodConfigResult};
 use serde::Deserialize;
 use serde::Serialize;
+use tools::helper::validate_nodeid;
 
 /// Zchronod Node Config
 #[derive(Clone, Deserialize, Serialize, Debug, Default)]
@@ -56,6 +57,16 @@ impl ZchronodConfig {
             }
             _ => err.into(),
         })?;
-        serde_yaml::from_str(&config_yaml).map_err(ZchronodConfigError::SerializationError)
+        
+        let config: ZchronodConfig = serde_yaml::from_str(&config_yaml).map_err(ZchronodConfigError::SerializationError)?;
+        ZchronodConfig::validate_config(&config)
+    }
+
+    pub fn validate_config(config: &ZchronodConfig) -> ZchronodConfigResult<ZchronodConfig> {
+        if !validate_nodeid(&config.node.node_id.clone().unwrap_or(String::new())) {
+            return Err(ZchronodConfigError::IllegalNodeId);
+        }
+        
+        Ok(config.clone())
     }
 }
