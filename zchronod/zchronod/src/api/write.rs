@@ -20,15 +20,7 @@ pub async fn handle_cli_write_msg(arc_zchronod: ZchronodArc,mut inner_msg: Inner
                 let state_storage = &arc_zchronod.clone().storage;
                 state_storage.sinker_clock(hex::encode(p2p_msg.id.clone()),m.message_data, &update_clock_info).await;
                 state_storage.sinker_zmessage(p2p_msg.clone()).await;
-                let proto_clock = Some(arc_zchronod.state.read().await.clock_info.clone()).map(clockinfo_to_proto());
-                let event = EventTrigger {
-                    clock_info: proto_clock,
-                    message: Some(p2p_msg.clone())
-                };
-                let z_clock = ZClock {
-                    r#type: ClockType::EventTrigger.into(),
-                    data: event.encode_to_vec(),
-                };
+                let z_clock = make_event_trigger_zclock(arc_zchronod.clone(), p2p_msg).await;
                 let mut z_msg = inner_msg.message.unwrap();
                 z_msg.r#type = ZType::Clock.into();
                 inner_msg.message = Some(z_msg);
@@ -39,14 +31,15 @@ pub async fn handle_cli_write_msg(arc_zchronod: ZchronodArc,mut inner_msg: Inner
     }
 }
 
-pub async fn handle_srv_event_trigger(z_clock: ZClock, inner_msg: Innermsg, p2p_msg: &ZMessage, arc_zchronod: ZchronodArc, src: SocketAddr) {
+pub async fn handle_srv_event_trigger(arc_zchronod: ZchronodArc, z_clock: ZClock, inner_msg: Innermsg, p2p_msg: &ZMessage,src: SocketAddr) {
     let event_msg = prost::bytes::Bytes::from(z_clock.data.clone());
     let event = EventTrigger::decode(event_msg).unwrap();
     let prost_clock = event.clock_info.unwrap();
     let input_clock_info :ClockInfo = (&prost_clock).into();
-    let (need_broadcast, merged) = arc_zchronod.state.write().await.merge(input_clock_info.clone(), &vec!(event.message.unwrap()));
+    let (need_broadcast, merged) = arc_zchronod.state.write().await.merge(input_clock_info.clone(), &vec!(event.message.clone().unwrap()));
     if need_broadcast {
-        broadcast_srv_state(arc_zchronod.clone(), inner_msg, &p2p_msg.data, src).await;
+        let new_z_clock = make_event_trigger_zclock(arc_zchronod.clone(), &event.message.unwrap()).await;
+        broadcast_srv_state(arc_zchronod.clone(), inner_msg, &new_z_clock.encode_to_vec(), src).await;
     } else {
         info!("clock is bigger or equal, no actions");
     }
@@ -58,6 +51,18 @@ pub async fn handle_srv_event_trigger(z_clock: ZClock, inner_msg: Innermsg, p2p_
     }
 }
 
+async fn make_event_trigger_zclock(arc_zchronod: ZchronodArc, inner_p2p_msg: &ZMessage) -> ZClock {
+    let proto_clock = Some(arc_zchronod.state.read().await.clock_info.clone()).map(clockinfo_to_proto());
+    let event = EventTrigger {
+        clock_info: proto_clock,
+        message: Some(inner_p2p_msg.clone())
+    };
+    let z_clock = ZClock {
+        r#type: ClockType::EventTrigger.into(),
+        data: event.encode_to_vec(),
+    };
+    z_clock
+}
 
 // fn handle_event_trigger(&mut self, msg: EventTrigger) -> Option<ServerMessage> {
 //     match self.clock_info.clock.partial_cmp(&msg.clock_info.clock) {

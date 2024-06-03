@@ -42,7 +42,7 @@ async fn handle_srv_msg(inner_msg: Innermsg, p2p_msg: &ZMessage, arc_zchronod: Z
             let clock_msg = prost::bytes::Bytes::from(p2p_msg.data.clone());
             let z_clock = ZClock::decode(clock_msg).unwrap_or(ZClock::default());
             match z_clock.r#type() {
-                ClockType::EventTrigger => write::handle_srv_event_trigger(z_clock, inner_msg, p2p_msg, arc_zchronod, src).await,
+                ClockType::EventTrigger => write::handle_srv_event_trigger(arc_zchronod, z_clock, inner_msg, p2p_msg, src).await,
                 ClockType::DiffReq => todo!(),
                 ClockType::DiffRsp => todo!(),
                 ClockType::ActiveSync => todo!(),
