@@ -52,6 +52,7 @@ pub async fn handle_srv_event_trigger(z_clock: ZClock, inner_msg: Innermsg, p2p_
     }
     if merged {
         let state_clock_info = &arc_zchronod.state.read().await.clock_info.clone();
+        arc_zchronod.storage.sinker_clock(hex::encode(input_clock_info.message_id.clone()), vec![], &state_clock_info).await;
         arc_zchronod.storage.sinker_merge_log(&input_clock_info, state_clock_info).await;
         arc_zchronod.storage.sinker_zmessage(p2p_msg.clone()).await;
     }
