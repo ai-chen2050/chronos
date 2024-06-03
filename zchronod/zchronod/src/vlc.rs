@@ -163,8 +163,7 @@ impl From<&ProtoClockInfo> for ClockInfo {
                 }
             }).unwrap();
         
-        let clock_str = serde_json::to_string(&clock).unwrap();
-        let clock_hash_hex = sha256_str_to_hex(clock_str.clone());
+        let clock_hash_hex = hex::encode(&protobuf_clock_info.clock_hash);
         let node_id = hex::encode(&protobuf_clock_info.node_id);
         let message_id = hex::encode(&protobuf_clock_info.message_id);
         let count = protobuf_clock_info.count;

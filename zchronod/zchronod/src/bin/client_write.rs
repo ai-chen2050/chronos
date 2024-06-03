@@ -69,7 +69,7 @@ fn client_message() -> Vec<u8> {
     println!("buf2: {:?}", buf2);
 
     let p2p_msg = ZMessage {
-        id: Vec::from("intobytes"),
+        id: hex::decode("78f16ee259fe7a23059890d81304476a75e6ba9df74b624226553c7fd545bcb2").unwrap(),
         from: Vec::from("msgfrom"),
         to: Vec::from("msg.to"),
         r#type: ZType::Zchat.into(),

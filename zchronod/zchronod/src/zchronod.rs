@@ -2,6 +2,7 @@ use crate::vlc::ClockInfo;
 use crate::{node_factory::ZchronodFactory, storage::Storage, vlc::Clock};
 use node_api::config::ZchronodConfig;
 use protos::zmessage::ZMessage;
+use tools::helper::sha256_str_to_hex;
 use std::collections::{BTreeMap, VecDeque};
 use std::{cmp, sync::Arc};
 use tokio::net::UdpSocket;
@@ -71,11 +72,17 @@ impl ServerState {
             }
         }
 
+        let now = tools::helper::get_time_ms();
         self.clock_info.clock.inc(self.clock_info.node_id.clone());
         self.clock_info.count += 1;
+        self.clock_info.create_at = now;
         if let Some(last) = items.last() {
             let last_id = hex::encode(last.id.clone());
             self.clock_info.message_id = last_id;
+
+            let clock_str = serde_json::to_string(&self.clock_info.clock).unwrap();
+            let hash_hex = sha256_str_to_hex(clock_str.clone());
+            self.clock_info.clock_hash = hash_hex;
         }
 
         true

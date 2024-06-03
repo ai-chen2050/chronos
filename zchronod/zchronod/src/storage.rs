@@ -36,11 +36,10 @@ impl Storage {
     // postgre inner api
     pub async fn sinker_clock(&self, message_id: String, raw_message: Vec<u8>, clock_info: &ClockInfo) {
         let clock_str = serde_json::to_string(&clock_info.clock).unwrap();
-        let hash_hex = sha256_str_to_hex(clock_str.clone());
         let naive_datetime = NaiveDateTime::from_timestamp_millis(clock_info.create_at.try_into().unwrap());
         let clock_info = clock_infos::ActiveModel {
             clock: ActiveValue::Set(clock_str.clone()),
-            clock_hash: ActiveValue::Set(hash_hex),
+            clock_hash: ActiveValue::Set(clock_info.clock_hash.clone()),
             node_id: ActiveValue::Set(clock_info.node_id.to_owned()),
             message_id: ActiveValue::Set(message_id),
             raw_message: ActiveValue::Set(raw_message),
@@ -55,10 +54,8 @@ impl Storage {
     }
 
     pub async fn sinker_merge_log(&self, fclock_info: &ClockInfo, tclock_info: &ClockInfo) {
-        let fclock_str = serde_json::to_string(&fclock_info.clock).unwrap();
-        let tclock_str = serde_json::to_string(&tclock_info.clock).unwrap();
-        let f_hash_hex = sha256_str_to_hex(fclock_str);
-        let e_hash_hex = sha256_str_to_hex(tclock_str);
+        let f_hash_hex = fclock_info.clock_hash.clone();
+        let e_hash_hex = tclock_info.clock_hash.clone();
         let now = Local::now().timestamp_millis();
         let naive_datetime = NaiveDateTime::from_timestamp_millis(now).unwrap();
         let merge_log = merge_logs::ActiveModel {
