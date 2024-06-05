@@ -7,11 +7,12 @@ use protos::{
 };
 use std::{
     collections::HashMap,
-    net::UdpSocket,
+    net::UdpSocket, thread,
 };
 
 fn main() -> std::io::Result<()> {
     let socket = UdpSocket::bind("127.0.0.1:0").expect("couldn't bind to address");
+    let write_count = 2;
 
     // now support message: srv_event_trigger_message
     let msg_type = "client";                    // first step test
@@ -25,34 +26,43 @@ fn main() -> std::io::Result<()> {
     }
 
     let destination = "127.0.0.1:8050";
-    socket.send_to(&buf3, destination)?;
+    let copy_socket = socket.try_clone().unwrap();
+    let spawn = thread::spawn(move || {
+        for _ in 0..write_count {
+            copy_socket.send_to(&buf3, destination).expect("couldn't send data");
+        }
+    });
 
     // recv msg
-    let mut buf = [0; 1024];
-    match socket.recv_from(&mut buf) {
-        Ok((size, _)) => {
-            let msg = prost::bytes::Bytes::copy_from_slice(&buf[..size]);
-            let response = Innermsg::decode(msg).unwrap();
-            println!("Received response: {:?}", response);
-            let zclock_bytes = prost::bytes::Bytes::from(response.message.unwrap().data);
-            let zclock = ZClock::decode(zclock_bytes).unwrap();
-            println!("Received zclock: {:?}", zclock);
-            let ev_bytes = prost::bytes::Bytes::from(zclock.data);
-            let event_trigger = EventTrigger::decode(ev_bytes).unwrap();
-            println!("Received event_trigger: {:?}", event_trigger);
-            let zchat_bytes = prost::bytes::Bytes::from(event_trigger.message.unwrap().data);
-            let zchat = ZChat::decode(zchat_bytes).unwrap();
-            println!("Received zchat: {:?}", zchat);
-            println!("Received message: {:?}", String::from_utf8_lossy(&zchat.message_data).into_owned());
+    for index in 0..write_count {
+        let mut buf = [0; 1024];
+        match socket.recv_from(&mut buf) {
+            Ok((size, _)) => {
+                let msg = prost::bytes::Bytes::copy_from_slice(&buf[..size]);
+                let response = Innermsg::decode(msg).unwrap();
+                println!("Received response: {:?}", response);
+                let zclock_bytes = prost::bytes::Bytes::from(response.message.unwrap().data);
+                let zclock = ZClock::decode(zclock_bytes).unwrap();
+                println!("Received zclock: {:?}", zclock);
+                let ev_bytes = prost::bytes::Bytes::from(zclock.data);
+                let event_trigger = EventTrigger::decode(ev_bytes).unwrap();
+                println!("Received event_trigger: {:?}", event_trigger);
+                let zchat_bytes = prost::bytes::Bytes::from(event_trigger.message.unwrap().data);
+                let zchat = ZChat::decode(zchat_bytes).unwrap();
+                println!("Received zchat: {:?}", zchat);
+                println!("Received message: {:?}", String::from_utf8_lossy(&zchat.message_data).into_owned());
+            }
+            Err(ref err) if err.kind() == std::io::ErrorKind::WouldBlock => {
+                println!("No response received.");
+            }
+            Err(err) => {
+                eprintln!("Error receiving response: {}", err);
+            }
         }
-        Err(ref err) if err.kind() == std::io::ErrorKind::WouldBlock => {
-            println!("No response received.");
-        }
-        Err(err) => {
-            eprintln!("Error receiving response: {}", err);
-        }
+        println!("received msg is {} times", index+1);
     }
 
+    spawn.join().unwrap();
     Ok(())
 }
 

@@ -19,6 +19,10 @@ pub struct DbConfig {
     pub storage_root_path: Option<StorageRootPath>,
     pub pg_db_url: String,
     pub pg_db_name: String,
+    pub max_connect_pool: u32,
+    pub min_connect_pool: u32,
+    pub connect_timeout: u64,  // seconds
+    pub acquire_timeout: u64,
 }
 
 #[derive(Clone, Deserialize, Serialize, Debug, Default)]

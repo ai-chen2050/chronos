@@ -2,12 +2,17 @@ use crate::{
     api::{read, write}, 
     zchronod::ZchronodArc,
 };
-use std::{net::SocketAddr, sync::Arc};
+use std::{
+    net::SocketAddr, sync::Arc,
+    // sync::atomic::{AtomicUsize, Ordering}, 
+};
 use protos::{vlc::{ClockType, ZClock}, zmessage::{ZMessage, ZType}};
 use websocket::ReceiveMessage;
 use prost::Message;
 use protos::innermsg::{Action, Identity, Innermsg};
 use tracing::*;
+
+// static MESSAGE_COUNT: AtomicUsize = AtomicUsize::new(0);
 
 pub(crate) async fn p2p_event_loop(arc_zchronod: ZchronodArc) {
     info!("Now p2p udp listen on : {}", arc_zchronod.config.net.inner_p2p);
@@ -25,10 +30,22 @@ pub(crate) async fn p2p_event_loop(arc_zchronod: ZchronodArc) {
 }
 
 pub(crate) async fn handle_msg(arc_zchronod: ZchronodArc, inner_msg: Innermsg, src: SocketAddr) {
+    let arc_zchronod_clone = arc_zchronod.clone();
+    let inner_msg_clone = inner_msg.clone();
+    
     if let Some(p2p_msg) = &inner_msg.clone().message {
+        let p2p_msg_clone = p2p_msg.clone();
         match inner_msg.identity() {
-            Identity::Client => handle_cli_msg(inner_msg, p2p_msg, arc_zchronod, src).await,
-            Identity::Server => handle_srv_msg(inner_msg, p2p_msg, arc_zchronod, src).await,
+            Identity::Client => {
+                let _ = tokio::spawn(async move {
+                    handle_cli_msg(inner_msg_clone, &p2p_msg_clone, arc_zchronod_clone, src).await;
+                });
+            },
+            Identity::Server => {
+                let _ = tokio::spawn(async move {
+                    handle_srv_msg(inner_msg_clone, &p2p_msg_clone, arc_zchronod_clone, src).await
+                });
+            },
             Identity::Init => {todo!()},
         }
     } else {
@@ -55,7 +72,16 @@ async fn handle_srv_msg(inner_msg: Innermsg, p2p_msg: &ZMessage, arc_zchronod: Z
 async fn handle_cli_msg(inner_msg: Innermsg, p2p_msg: &ZMessage, arc_zchronod: ZchronodArc, src: SocketAddr) {
     match inner_msg.action() {
         Action::Write => write::handle_cli_write_msg(arc_zchronod, inner_msg, p2p_msg, src).await,
-        Action::Read => read::handle_cli_read_msg(arc_zchronod, inner_msg, p2p_msg, src).await,
+        Action::Read => {
+            let arc_zchronod_clone = arc_zchronod.clone();
+            let inner_msg_clone = inner_msg.clone();
+            let p2p_msg_clone = p2p_msg.clone();
+            let _ = tokio::spawn(async move {
+                // MESSAGE_COUNT.fetch_add(1, Ordering::SeqCst);
+                // debug!("Total recv read msg: {}", MESSAGE_COUNT.load(Ordering::SeqCst));
+                read::handle_cli_read_msg(arc_zchronod_clone, inner_msg_clone, &p2p_msg_clone, src).await;
+            });
+        }
         _ => {}
     }
 }

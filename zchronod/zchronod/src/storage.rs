@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{sync::Arc, time::Duration};
 use chrono::{Local, NaiveDateTime};
 use db_sql::pg::entities::{merge_logs, z_messages};
 use node_api::config::ZchronodConfig;
@@ -6,7 +6,6 @@ use node_api::config::ZchronodConfig;
 use db_sql::pg::entities::{clock_infos, prelude::{ClockInfos, MergeLogs, ZMessages}};
 use protos::zmessage::ZMessage as ProtoZMessage;
 use sea_orm::*;
-use tools::helper::sha256_str_to_hex;
 use crate::vlc::ClockInfo;
 use crate::vlc::MergeLog;
 use tracing::{error, info};
@@ -25,7 +24,14 @@ impl Storage {
         
         // connect to pg db
         let url = format!("{}/{}", config.db.pg_db_url, config.db.pg_db_name);
-        let pg_db = Database::connect(&url).await.expect("failed to connect to database");
+        let mut opt = ConnectOptions::new(&url);
+        opt.max_connections(config.db.max_connect_pool)
+            .min_connections(config.db.min_connect_pool)
+            .connect_timeout(Duration::from_secs(config.db.connect_timeout)) 
+            .acquire_timeout(Duration::from_secs(config.db.acquire_timeout));
+        
+        let pg_db = Database::connect(opt.clone()).await.expect("failed to connect to database");
+        info!("max_connections={:?},connect timeout={:?}, acquire timeout={:?}", opt.get_max_connections().unwrap(), opt.get_connect_timeout().unwrap(),opt.get_acquire_timeout().unwrap());
         let pg_db_arc = Arc::new(pg_db);
         Self {
             // zchronod_db,

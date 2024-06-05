@@ -7,7 +7,7 @@ use protos::{
     zmessage::{ZMessage, ZType},
     // vlc::ClockInfos
 };
-use std::{net::UdpSocket, thread};
+use std::{net::UdpSocket, sync::mpsc, thread, time::{Duration, Instant}};
 
 fn main() -> std::io::Result<()> {
     let socket = UdpSocket::bind("127.0.0.1:0").expect("couldn't bind to address");
@@ -38,16 +38,23 @@ fn main() -> std::io::Result<()> {
 
     let destination = "127.0.0.1:8050";
     let copy_socket = socket.try_clone().unwrap();
+    let (tx, rx) = mpsc::channel();
     let spawn = thread::spawn(move || {
-        for _ in 0..query_count {
+        let start = Instant::now();
+        for i in 0..query_count {
             copy_socket.send_to(&data, destination).expect("couldn't send data");
+            if i % 100 == 0 {
+                thread::sleep(Duration::from_millis(100));   // Control sending rate
+            }
         }
+        let duration = start.elapsed();
+
+        // Notify the receiver thread that sending is done
+        tx.send(duration).expect("Couldn't notify receiver thread");
     });
 
     // recv msg
-    let mut count = 0;
-    for _ in 0..query_count {
-        count += 1;
+    for index in 0..query_count {
         let mut buf = [0; 65535];
         match socket.recv_from(&mut buf) {
             Ok((size, _)) => {
@@ -65,7 +72,11 @@ fn main() -> std::io::Result<()> {
                 eprintln!("Error receiving response: {}", err);
             }
         }
-        println!("received msg is {} times", count);
+        println!("received msg is {} times", index+1);
+
+        if let Ok(elapsed) = rx.try_recv() {
+            println!("Send Done: {} query times in {:?}", query_count, elapsed);
+        }
     }
 
     spawn.join().unwrap();

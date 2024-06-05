@@ -15,7 +15,8 @@ pub async fn handle_cli_write_msg(arc_zchronod: ZchronodArc,mut inner_msg: Inner
         ZType::Zchat =>{
             let zchat_msg = prost::bytes::Bytes::from(p2p_msg.data.clone());
             let m = ZChat::decode(zchat_msg).unwrap();
-            if arc_zchronod.state.write().await.add(vec![p2p_msg.clone()]) {
+            let write_success = arc_zchronod.state.write().await.add(vec![p2p_msg.clone()]); 
+            if write_success {
                 let update_clock_info: ClockInfo = arc_zchronod.state.read().await.clock_info.clone();
                 let state_storage = &arc_zchronod.clone().storage;
                 state_storage.sinker_clock(hex::encode(p2p_msg.id.clone()),m.message_data, &update_clock_info).await;

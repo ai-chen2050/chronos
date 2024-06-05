@@ -1,6 +1,10 @@
 db:
   pg_db_url: "postgres://postgres:hetu@0.0.0.0:5432"
   pg_db_name: "vlc_inner_db"
+  max_connect_pool: 30
+  min_connect_pool: 10
+  connect_timeout: 30
+  acquire_timeout: 60
 net:
   outer_p2p: "0.0.0.0:8051"
   inner_p2p: "0.0.0.0:8050"
