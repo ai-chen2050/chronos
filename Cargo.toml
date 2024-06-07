@@ -12,13 +12,12 @@ members = [
     "tools/replication-control",
     "tools/replication-control-messages",
     "tools/kademlia-control-messages",
+    "crates/protos",
     "zchronod/zchronod",
     "demos/test_conflict",
     "demos/coll-tx",
     "demos/vlc-dag",
     "tools/kademlia-control-messages", 
-    "demos/test_conflict",
-    "crates/protos",
 ]
 
 [workspace.lints.clippy]
@@ -57,4 +56,3 @@ tokio-util = "0.7.10"
 [lib]
 name = "test"
 path = "src/lib.rs"
-
