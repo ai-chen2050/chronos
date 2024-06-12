@@ -4,7 +4,7 @@
 
 The zchronod or chronos is a implement of vlc(verifiable logical clock).
 
-It use the znet p2p relay as network module. And as a backend project node for supporting verifiable logical clock and causality ordering. This system is currently in poc stage.
+It use the [zeb](https://github.com/hetu-project/zeb) p2p relay as network module. And as a backend project node for supporting verifiable logical clock and causality ordering. This system is currently in poc stage.
 
 ## Dependences
 
@@ -12,15 +12,15 @@ It use the znet p2p relay as network module. And as a backend project node for s
 
 The zchronod depends on postgre db for data persistence, so please install postgre and setup a pg instance. 
 
-### Znet p2p relayer
+### Zeb p2p relayer
 
-The zchronod play a role of inner logic and state layer in vlc overview. One zchronod process matches a znet p2p node, and them use inner net socket for communication.
+The zchronod play a role of inner logic and state layer in vlc overview. One zchronod process matches a zeb p2p node, and them use inner net socket for communication.
 
-For now, zchronod and znet use the same node identity for two processes. So first generate a key pair identity, then address it to `node_id` in [config-tempelete.yaml](../zchronod/config-tempelete.yaml) of zchronod.
+For now, zchronod and zeb use the same node identity for two processes. So first generate a key pair identity, then address it to `node_id` in [config-tempelete.yaml](../zchronod/config-tempelete.yaml) of zchronod.
 
 ### Net messaging
 
-The zchronod and znet using protobuf proto3 as serialization compression algorithm and communication protocol. More messages body details, please see [crates/protos](../crates/protos/) for check it.
+The zchronod and zeb using protobuf proto3 as serialization compression algorithm and communication protocol. More messages body details, please see [crates/protos](../crates/protos/) for check it.
 
 ## Compile
 
