@@ -1,6 +1,4 @@
 use std::path::{Path, PathBuf};
-use std::sync::Arc;
-use std::sync::atomic::AtomicUsize;
 use shrinkwraprs::Shrinkwrap;
 use derive_more::Into;
 use crate::error::DatabaseResult;
@@ -19,8 +17,8 @@ impl<Kind: DbKindT + Send + Sync + 'static> DbWrite<Kind> {
         })
     }
     pub fn new(
-        path_prefix: Option<&Path>,
-        kind: Kind,
+        _path_prefix: Option<&Path>,
+        _kind: Kind,
     ) -> DatabaseResult<Self> {
         todo!()
     }
@@ -65,6 +63,6 @@ pub enum DbKind {
 
 #[derive(Clone, Debug)]
 pub struct DbRead<Kind: DbKindT> {
-    kind: Kind,
-    path: PathBuf,
+    _kind: Kind,
+    _path: PathBuf,
 }
