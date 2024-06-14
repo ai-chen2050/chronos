@@ -10,19 +10,16 @@
 
 pub mod db_client;
 
-use clap::builder::Str;
+// use clap::builder::Str;
 use db_client::lldb_client::VLCLLDb;
 use serde::{Deserialize, Serialize};
 use std::time::UNIX_EPOCH;
 use std::{cmp, time::SystemTime};
-use std::collections::{BTreeSet, HashMap, HashSet};
+use std::collections::{BTreeSet, HashMap};
 use std::io::BufRead;
 use std::sync::{Arc, RwLock};
 use std::net::SocketAddr;
 use tokio::net::UdpSocket;
-
-use std::time;
-use tokio::{task::JoinHandle};
 use vlc::Clock;
 use lmdb_rs as lmdb;
 
@@ -145,7 +142,7 @@ struct ServerState {
     clock_info: ClockInfo,
     id: u128,
     items: Vec<String>, // BtreeSet or HashSet can't keep event inserted order.
-    clock_to_eventid: HashMap<String, String>, // clock_id to event_id
+    clock_to_msgid: HashMap<String, String>, // clock_id to event_id or msg_id
     message_id_set: BTreeSet<String>,
 }
 
@@ -163,7 +160,7 @@ impl ServerState {
             },
             id,
             items: Vec::new(),
-            clock_to_eventid: HashMap::new(),
+            clock_to_msgid: HashMap::new(),
             message_id_set: BTreeSet::new(),
         }
     }
@@ -206,7 +203,7 @@ impl ServerState {
                     let req = ServerMessage::ActiveSync(ActiveSync { diffs: self.items.clone(), latest: self.clock_info.clone(), to: msg.clock_info.id });
                     Some(req)
                 } else {
-                    if let Some(start_msg_id) = self.clock_to_eventid.get(&base.index_key()) {
+                    if let Some(start_msg_id) = self.clock_to_msgid.get(&base.index_key()) {
                         if let Some(diff_msg_ids) = get_suffix(&self.items, start_msg_id.to_string()) {
                             // req diff and send self diff
                             let req = ServerMessage::ActiveSync(ActiveSync { diffs: diff_msg_ids, latest: self.clock_info.clone(), to: msg.clock_info.id });
@@ -222,14 +219,14 @@ impl ServerState {
         }
     }
 
-    fn handle_diff_req(&mut self, msg: DiffReq, db: Arc<RwLock<VLCLLDb>>) -> Option<ServerMessage> {
+    fn handle_diff_req(&mut self, msg: DiffReq, _db: Arc<RwLock<VLCLLDb>>) -> Option<ServerMessage> {
         // println!("Key-To-messageid: {:?}", self.clock_to_eventid);
         if msg.from_clock.count == 0 {
             let req = ServerMessage::DiffRsp(DiffRsp { diffs: self.items.clone(), from:self.clock_info.clone(), to: msg.from_clock.id });
             return Some(req);
         }
         let empty_str = String::new();
-        let start_msg_id =self.clock_to_eventid.get(&msg.from_clock.clock.index_key()).unwrap_or(&empty_str);
+        let start_msg_id =self.clock_to_msgid.get(&msg.from_clock.clock.index_key()).unwrap_or(&empty_str);
         // get begin from start_msg_id to end of state set
         if let Some(diff_msg_ids) = get_suffix(&self.items, start_msg_id.to_string()) {
             let req = ServerMessage::DiffRsp(DiffRsp { diffs: diff_msg_ids,from:self.clock_info.clone(), to: msg.from_clock.id });
@@ -239,7 +236,7 @@ impl ServerState {
         }
     }
 
-    fn handle_diff_rsp(&mut self, msg: DiffRsp, db: Arc<RwLock<VLCLLDb>>) -> bool {
+    fn handle_diff_rsp(&mut self, msg: DiffRsp, _db: Arc<RwLock<VLCLLDb>>) -> bool {
         match self.clock_info.clock.partial_cmp(&msg.from.clock) {
             Some(cmp::Ordering::Equal) => {},
             Some(cmp::Ordering::Greater) => {},
@@ -247,7 +244,7 @@ impl ServerState {
                 self.items.extend(msg.diffs.clone());  // message id represent message 
                 self.clock_info = msg.from.clone();
                 self.clock_info.clock.inc(self.id);
-                self.clock_to_eventid.insert(msg.from.clock.index_key(), msg.from.message_id);
+                self.clock_to_msgid.insert(msg.from.clock.index_key(), msg.from.message_id);
                 self.message_id_set.extend(msg.diffs);
                 return true;
             }
@@ -262,7 +259,7 @@ impl ServerState {
         false
     }
 
-    fn handle_active_sync(&mut self, msg: ActiveSync, db: Arc<RwLock<VLCLLDb>>) -> (Option<ServerMessage>, bool){
+    fn handle_active_sync(&mut self, msg: ActiveSync, _db: Arc<RwLock<VLCLLDb>>) -> (Option<ServerMessage>, bool){
         match self.clock_info.clock.partial_cmp(&msg.latest.clock) {
             Some(cmp::Ordering::Equal) => return (None, false),
             Some(cmp::Ordering::Greater) => return (None, false),
@@ -317,7 +314,7 @@ impl ServerState {
 /// Clock info sinker to db.
 /// id is server node id, count is the event count in this server.
 #[derive(Serialize, Deserialize, Debug, Clone)]
-struct ClockInfo {
+pub struct ClockInfo {
     pub clock: Clock,
     pub id: u128,  
     pub message_id: String,
@@ -337,7 +334,7 @@ impl ClockInfo {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 struct MergeLog {
     from_id: u128,
-    to_id: u128,
+    to_id: u128,    // to_node trigger merge action
     start_count: u128,
     end_count: u128,
     s_clock_hash: Clock,    // todo: needs hash when use related-db
@@ -411,7 +408,6 @@ impl Server {
                             self.sinker_merge_log(&msg.latest).await;
                         }
                     }
-                    _ => { println!("[broadcast_state]: not support ServerMessage ")}
                 }
             }
             Message::Terminate => {
@@ -435,7 +431,7 @@ impl Server {
             create_at: time,
         };
         self.db.write().unwrap().add_clock_infos(key, clock_info.clone());
-        self.state.clock_to_eventid.insert(clock_info.clock.index_key(), message_id.clone());
+        self.state.clock_to_msgid.insert(clock_info.clock.index_key(), message_id.clone());
     }
 
     /// sinker merge action to db
@@ -462,23 +458,16 @@ impl Server {
 
     /// direct send to someone node
     async fn direct_send(&mut self, fmsg: ServerMessage) {
-        let mut index = 0;
-        let server_msg = Message::FromServer(fmsg.clone());
-        match fmsg.clone() {
-            ServerMessage::DiffReq(msg) => {
-                index = msg.to;
-            }
-            ServerMessage::DiffRsp(msg) => {
-                index = msg.to;
-            }
-            ServerMessage::ActiveSync(msg) => {
-                index = msg.to;
-            }
+        let index = match fmsg.clone() {
+            ServerMessage::DiffReq(msg) => msg.to,
+            ServerMessage::DiffRsp(msg) => msg.to,
+            ServerMessage::ActiveSync(msg) => msg.to,
             _ => { return }
-        }
+        };
 
         let msg_index: usize = index.try_into().unwrap();
         if self.index != msg_index {
+            let server_msg = Message::FromServer(fmsg.clone());
             self.socket
                 .send_to(
                     serde_json::to_string(&server_msg).unwrap().as_bytes(),
@@ -550,6 +539,8 @@ fn get_suffix<T: PartialEq + Clone>(vec: &[T], target: T) -> Option<Vec<T>> {
 #[cfg(test)]
 mod tests {
     use rand::Rng;
+    use std::time;
+    use tokio::task::JoinHandle;
 
     use super::*;
 
