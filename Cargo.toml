@@ -9,10 +9,6 @@ members = [
     "crates/accumulator",
     "crates/vlc",
     "crates/cops",
-    "tools/replication-control",
-    "tools/replication-control-messages",
-    "tools/kademlia-control-messages",
-    "zchronod/zchronod",
     "demos/test_conflict",
     "demos/coll-tx",
     "demos/vlc-dag"
