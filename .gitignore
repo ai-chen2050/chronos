@@ -3,3 +3,6 @@
 
 # ide
 .vscode
+
+# lint
+.protolint.yaml
