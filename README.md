@@ -13,7 +13,7 @@ Chronos organization layout is as follows:
 * [`crates/`](./crates/) the common dependences and core functional crates folder.
 * [`demos/`](./demos/) some use cases of applied the Chronos and proposals.
 * [`docs/`](./docs/) design and applied documents for demonstrating thoughts.
-* `src/` the source codebase of shared definitions and some common codes.
+* [`src/`](./src/) the source codebase of shared definitions and some common codes.
 
 ## Features
 
@@ -34,11 +34,11 @@ Please refer to [hetu key research](https://github.com/hetu-project#hetu-key-res
 Regular logical clock have been applied in many scenarios. As follows:
 
 - Weakly consistent storage systems
-    - `Cops: causally Consistent Data Store`
-- Causally ordered broadcast
-    - [Reference: vlc + p2p combined](https://github.com/NagaraTech/hetu-docs/blob/main/Zeb/vlc.md) 
+    - [Cops: Causal Consistency Data Storage](https://www.cs.cmu.edu/~dga/papers/cops-sosp2011.pdf)
+- Broadcast events with causally ordered 
+    - [Reference: verifiable clock & p2p combined or optimizing](https://github.com/hetu-project/docs/blob/main/Zeb/vlc.md) 
 - Deadlock detection
-    - `Mutual exclusion` of shared resources in a distributed system
+    - Mutual exclusion of shared resources in a distributed system
     - Bakery algorithm
 - Distributed snapshots
 - Distributed system debugging.
