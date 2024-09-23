@@ -23,7 +23,7 @@ rand = "0.8.5"
 vlc ={ path = "../../crates/vlc", version = "0.1.0"}
 types ={ path = "../../crates/types", version = "0.1.0"}
 crypto ={ path = "../../crates/crypto", version = "0.1.0"}
-enclaves ={ path = "../../crates/enclaves", version = "0.1.0"}
+enclaves ={ path = "../../crates/enclaves", features = ["nitro-enclaves"], version = "0.1.0"}
 serde = { version = "1.0.195", features = ["derive"] }
 nix = { version = "0.28.0", features = ["socket", "sched", "resource"] }
 tikv-jemallocator = { version = "0.5.4", optional = true }
